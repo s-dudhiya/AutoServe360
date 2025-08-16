@@ -1,0 +1,40 @@
+# Python / Django
+**/__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+/backend/venv/
+/backend/db.sqlite3
+/backend/*.log
+
+# Node.js / React / Vite
+/frontend/node_modules/
+/frontend/dist/
+/frontend/.vite/
+/frontend/npm-debug.log*
+/frontend/yarn-debug.log*
+/frontend/yarn-error.log*
+
+# Environment variables
+.env
+.env.*
+!/.env.example
+/backend/.env
+/frontend/.env
+/frontend/.env.*
+!/frontend/.env.example
+
+# OS generated files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
