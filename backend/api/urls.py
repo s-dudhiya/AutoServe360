@@ -1,7 +1,7 @@
-from django.urls import path,include
-from . import views
+# urls.py
+from django.urls import path
+from .views import LoginView
 
 urlpatterns = [
-    path('hello-world/', views.hello_world, name='hello-world')
-    
+    path('login/', LoginView.as_view(), name='login'),
 ]

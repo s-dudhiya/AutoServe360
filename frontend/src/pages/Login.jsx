@@ -18,48 +18,60 @@ import {
   Loader2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 export default function Login() {
   const navigate = useNavigate();
-  const [showPassword, setShowPassword] = useState(false);
+  const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: "",
-    password: ""
+    username: "",
+    pin: ""
   });
+  const [errorMsg, setErrorMsg] = useState("");
 
   const handleInputChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+    setErrorMsg("");
   };
 
-  const handleSubmit = (e) => {
+  const toggleShowPin = () => {
+    setShowPin(prev => !prev);
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
-    
-    // Simulate loading and then navigate based on email
-    setTimeout(() => {
-      if (formData.email.includes('admin') || formData.email === '') {
-        handleAdminLogin();
+    setErrorMsg("");
+
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/login/", {
+        username: formData.username,
+        pin: Number(formData.pin),
+      }, {
+        headers: { "Content-Type": "application/json" }
+      });
+
+      const data = response.data;
+      localStorage.setItem("userRole", data.role);
+      localStorage.setItem("userEmail", data.email);
+
+      if (data.role === "admin") {
+        navigate("/admin");
+      } else if (data.role === "mechanic") {
+        navigate("/mechanic");
       } else {
-        handleMechanicLogin();
+        setErrorMsg("Unauthorized role");
       }
+    } catch (error) {
+      setErrorMsg(
+        error.response?.data?.error ||
+        error.message ||
+        "Login failed."
+      );
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  };
-
-  const handleAdminLogin = () => {
-    localStorage.setItem('userRole', 'admin');
-    localStorage.setItem('userEmail', formData.email || 'admin@autoserve360.com');
-    navigate('/admin');
-  };
-
-  const handleMechanicLogin = () => {
-    localStorage.setItem('userRole', 'mechanic');
-    localStorage.setItem('userEmail', formData.email || 'mechanic@autoserve360.com');
-    navigate('/mechanic');
+    }
   };
 
   return (
@@ -90,40 +102,59 @@ export default function Login() {
 
         <Card className="shadow-glow border-0 bg-gradient-card backdrop-blur-xl">
           <CardContent className="p-8 space-y-8">
+            {/* Error Popup */}
+            {errorMsg && (
+              <div className="mb-4 flex items-center justify-center">
+                <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md w-full">
+                  <span className="block font-semibold">{errorMsg}</span>
+                </div>
+              </div>
+            )}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email" className="text-base font-semibold text-foreground">Email Address</Label>
+                  <Label htmlFor="username" className="text-base font-semibold text-foreground">Username</Label>
                   <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="admin@autoserve360.com"
-                    value={formData.email}
+                    id="username"
+                    name="username"
+                    type="text"
+                    placeholder="Enter your username"
+                    value={formData.username}
                     onChange={handleInputChange}
                     required
                     className="h-14 text-base border-2 border-primary/20 focus:border-secondary focus:ring-secondary/20 bg-background/80 backdrop-blur-sm"
+                    disabled={isLoading}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="password" className="text-base font-semibold text-foreground">Password</Label>
+
+                <div className="space-y-2 relative">
+                  <Label htmlFor="pin" className="text-base font-semibold text-foreground">PIN</Label>
                   <Input
-                    id="password"
-                    name="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter any password"
-                    value={formData.password}
+                    id="pin"
+                    name="pin"
+                    type={showPin ? "text" : "password"}
+                    placeholder="Enter your PIN"
+                    value={formData.pin}
                     onChange={handleInputChange}
                     required
-                    className="h-14 text-base border-2 border-primary/20 focus:border-secondary focus:ring-secondary/20 bg-background/80 backdrop-blur-sm"
+                    className="h-14 text-base border-2 border-primary/20 focus:border-secondary focus:ring-secondary/20 bg-background/80 backdrop-blur-sm pr-12"
+                    disabled={isLoading}
                   />
+                  <button
+                    type="button"
+                    onClick={toggleShowPin}
+                    className="absolute top-1/2 right-2 -translate-y-1 text-gray-500 hover:text-gray-700 focus:outline-none"
+                    tabIndex={-1}
+                  >
+                    {showPin ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
-              
-              <Button 
-                type="submit" 
-                size="lg" 
-                className="w-full h-14 text-base font-semibold bg-gradient-accent shadow-yellow hover:shadow-glow transition-all duration-300 transform hover:scale-105 group" 
+
+              <Button
+                type="submit"
+                size="lg"
+                className="w-full h-14 text-base font-semibold bg-gradient-accent shadow-yellow hover:shadow-glow transition-all duration-300 transform hover:scale-105 group"
                 disabled={isLoading}
               >
                 {isLoading ? (
@@ -134,54 +165,18 @@ export default function Login() {
                 {isLoading ? "Accessing Dashboard..." : "Access Dashboard"}
               </Button>
             </form>
-
-            {/* Demo Info Card */}
-            <div className="bg-gradient-modern/10 border-2 border-secondary/20 rounded-2xl p-6 space-y-4">
-              <div className="flex items-center space-x-2">
-                <div className="w-6 h-6 bg-secondary rounded-full flex items-center justify-center">
-                  <Loader2 className="w-3 h-3 text-primary animate-spin" />
-                </div>
-                <h3 className="font-bold text-foreground">Demo Accounts</h3>
-              </div>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center justify-between p-3 bg-background/50 rounded-xl">
-                  <div>
-                    <p className="font-semibold text-primary">Admin Dashboard</p>
-                    <p className="text-muted-foreground">admin@autoserve360.com</p>
-                  </div>
-                  <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
-                </div>
-                <div className="flex items-center justify-between p-3 bg-background/50 rounded-xl">
-                  <div>
-                    <p className="font-semibold text-secondary">Mechanic Panel</p>
-                    <p className="text-muted-foreground">mike@autoserve360.com</p>
-                  </div>
-                  <div className="w-3 h-3 bg-warning rounded-full animate-pulse"></div>
-                </div>
-              </div>
-            </div>
-
-            <div className="text-center">
-              <p className="text-sm text-muted-foreground">
-                Need an account?{" "}
-                <span className="text-secondary font-semibold">
-                  Contact your garage administrator
-                </span>
-              </p>
+            <div className="text-center mt-8">
+              <Button
+                variant="ghost"
+                onClick={() => navigate('/')}
+                className="text-primary/80 hover:text-secondary hover:bg-secondary/10 transition-all duration-300 group"
+              >
+                <ArrowRight className="mr-2 h-4 w-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
+                Back to Home
+              </Button>
             </div>
           </CardContent>
         </Card>
-
-        <div className="text-center mt-8">
-          <Button 
-            variant="ghost" 
-            onClick={() => navigate('/')}
-            className="text-primary/80 hover:text-secondary hover:bg-secondary/10 transition-all duration-300 group"
-          >
-            <ArrowRight className="mr-2 h-4 w-4 rotate-180 group-hover:-translate-x-1 transition-transform duration-300" />
-            Back to Home
-          </Button>
-        </div>
       </div>
     </div>
   );
