@@ -9,4 +9,8 @@ export default defineConfig({
       '@': path.resolve(__dirname, './src'),
     },
   },
+  server: {
+    host: true,        // listen on all addresses, including LAN IPs
+    port: 1212,        
+  },
 })

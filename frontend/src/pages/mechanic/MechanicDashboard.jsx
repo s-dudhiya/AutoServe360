@@ -41,12 +41,6 @@ export default function MechanicDashboard() {
   const inProgressJobs = myJobs.filter(job => job.status === 'Under Service').length;
   const queuedJobs = myJobs.filter(job => job.status === 'In Queue').length;
 
-  const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    navigate('/login');
-  };
-
   const handleStartJob = (jobId) => {
     setActiveJobId(jobId);
   };
@@ -67,7 +61,7 @@ export default function MechanicDashboard() {
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
-        <Navbar onLogout={handleLogout} />
+        <Navbar />
         
         <main className="flex-1 p-6 space-y-8">
           {/* Modern Mechanic Header */}

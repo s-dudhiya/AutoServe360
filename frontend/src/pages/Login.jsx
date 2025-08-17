@@ -1,27 +1,24 @@
 import { useState } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
-  Wrench, 
-  Settings, 
-  User, 
-  ArrowLeft,
-  ArrowRight,
-  Shield,
+  Car, 
+  Loader2,
   Eye,
   EyeOff,
-  Car,
-  Loader2
+  ArrowRight
 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useAuth } from "../context/AuthContext"; // Import the useAuth hook
 
 export default function Login() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { login } = useAuth(); // Get the login function from context
+
   const [showPin, setShowPin] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,6 +26,8 @@ export default function Login() {
     pin: ""
   });
   const [errorMsg, setErrorMsg] = useState("");
+
+  const from = location.state?.from?.pathname || null;
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -53,16 +52,17 @@ export default function Login() {
       });
 
       const data = response.data;
-      localStorage.setItem("userRole", data.role);
-      localStorage.setItem("userEmail", data.email);
 
-      if (data.role === "admin") {
-        navigate("/admin");
-      } else if (data.role === "mechanic") {
-        navigate("/mechanic");
-      } else {
-        setErrorMsg("Unauthorized role");
+      // Use the login function from context.
+      // This will update the global state and handle redirection.
+      login(data);
+
+      // If there was a page the user was trying to access, redirect there.
+      // The context-based redirection will be overridden by this if `from` exists.
+      if (from) {
+        navigate(from, { replace: true });
       }
+
     } catch (error) {
       setErrorMsg(
         error.response?.data?.error ||
@@ -102,7 +102,6 @@ export default function Login() {
 
         <Card className="shadow-glow border-0 bg-gradient-card backdrop-blur-xl">
           <CardContent className="p-8 space-y-8">
-            {/* Error Popup */}
             {errorMsg && (
               <div className="mb-4 flex items-center justify-center">
                 <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative max-w-md w-full">

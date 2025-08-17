@@ -1,12 +1,11 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, 
-  FileText, 
-  Package, 
-  BarChart3, 
+import {
+  LayoutDashboard,
+  FileText,
+  Package,
+  BarChart3,
   Bell,
-  User,
-  Wrench
+  Wrench,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getCurrentUser } from "@/utils/mockData";
@@ -24,23 +23,30 @@ const mechanicNavItems = [
   { title: "Notifications", path: "/mechanic/notifications", icon: Bell },
 ];
 
-export function Sidebar() {
+export  function Sidebar({ collapsed }) {
   const location = useLocation();
   const currentUser = getCurrentUser();
-  const navItems = currentUser.role === 'admin' ? adminNavItems : mechanicNavItems;
+  const navItems = currentUser.role === "admin" ? adminNavItems : mechanicNavItems;
 
   return (
-    <div className="flex flex-col w-64 bg-card border-r border-border shadow-soft">
-      <div className="flex items-center justify-center h-16 border-b border-border">
-        <div className="flex items-center space-x-3">
+    <aside
+      className={cn(
+        "fixed top-0 left-0 h-full bg-card border-r border-border shadow-soft z-50 flex flex-col transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}
+    >
+      <div className="flex items-center h-16 border-b border-border px-4">
+        <div className="flex items-center space-x-3 mx-auto">
           <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
             <span className="text-primary-foreground font-bold">A360</span>
           </div>
-          <span className="text-lg font-bold text-foreground">AutoServe 360</span>
+          {!collapsed && (
+            <span className="text-lg font-bold text-foreground">AutoServe 360</span>
+          )}
         </div>
       </div>
 
-      <nav className="flex-1 px-4 py-6 space-y-2">
+      <nav className="flex-1 px-2 py-6 space-y-2 overflow-y-auto">
         {navItems.map((item) => {
           const isActive = location.pathname === item.path;
           return (
@@ -48,31 +54,20 @@ export function Sidebar() {
               key={item.path}
               to={item.path}
               className={cn(
-                "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200",
+                "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200",
                 isActive
                   ? "bg-primary text-primary-foreground shadow-medium"
                   : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-soft"
               )}
             >
               <item.icon className="h-5 w-5" />
-              <span className="font-medium">{item.title}</span>
+              {!collapsed && (
+                <span className="font-medium select-none">{item.title}</span>
+              )}
             </NavLink>
           );
         })}
       </nav>
-
-      <div className="p-4 border-t border-border">
-        <NavLink
-          to={currentUser.role === 'admin' ? '/admin/profile' : '/mechanic/profile'}
-          className={cn(
-            "flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200",
-            "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-soft"
-          )}
-        >
-          <User className="h-5 w-5" />
-          <span className="font-medium">Profile</span>
-        </NavLink>
-      </div>
-    </div>
+    </aside>
   );
 }

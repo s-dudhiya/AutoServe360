@@ -1,72 +1,80 @@
-import { User, Bell, Settings, LogOut } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { getCurrentUser } from "@/utils/mockData";
+import { Menu, Bell, User } from "lucide-react";
+import { useState, useRef, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
-export function Navbar({ onLogout }) {
-  const currentUser = getCurrentUser();
+export function Navbar({ sidebarCollapsed, toggleSidebar }) {
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const profileRef = useRef();
+  const navigate = useNavigate();
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(e) {
+      if (profileRef.current && !profileRef.current.contains(e.target)) {
+        setProfileMenuOpen(false);
+      }
+    }
+    if (profileMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [profileMenuOpen]);
+
+  const handleLogout = () => {
+    setProfileMenuOpen(false);
+    localStorage.clear();
+    window.dispatchEvent(new Event("storage"));
+    navigate("/login");
+  };
 
   return (
-    <nav className="bg-background border-b border-border shadow-soft">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between h-16">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 flex items-center">
-              <div className="w-8 h-8 bg-gradient-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-sm">A360</span>
-              </div>
-              <span className="ml-3 text-xl font-bold text-foreground">AutoServe 360</span>
+    <header
+      className="fixed top-0 h-16 right-0 bg-card border-b border-border shadow-soft z-50 flex items-center justify-between px-6"
+      style={{
+        left: sidebarCollapsed ? "4rem" : "16rem",
+        transition: "left 0.3s",
+        width: `calc(100% - ${sidebarCollapsed ? "4rem" : "16rem"})`
+      }}
+    >
+      <div className="flex items-center space-x-4">
+        <button onClick={toggleSidebar} className="focus:outline-none">
+          <Menu className="h-6 w-6 text-muted-foreground cursor-pointer" />
+        </button>
+        <span className="text-xl font-semibold text-foreground select-none">Dashboard</span>
+      </div>
+      <div className="flex items-center space-x-4">
+        <Bell className="h-6 w-6 text-muted-foreground cursor-pointer" />
+        <div className="relative" ref={profileRef}>
+          <button
+            onClick={() => setProfileMenuOpen((o) => !o)}
+            className="focus:outline-none"
+            aria-haspopup="true"
+            aria-expanded={profileMenuOpen}
+          >
+            <User className="h-6 w-6 text-muted-foreground cursor-pointer" />
+          </button>
+          {profileMenuOpen && (
+            <div className="absolute right-0 mt-2 w-40 bg-white border border-border rounded shadow-lg z-50">
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-accent text-foreground"
+                onClick={() => {
+                  setProfileMenuOpen(false);
+                  // navigate to profile page
+                  navigate("/profile");
+                }}
+              >
+                View Profile
+              </button>
+              <button
+                className="block w-full text-left px-4 py-2 hover:bg-accent text-foreground"
+                onClick={handleLogout}
+              >
+                Logout
+              </button>
             </div>
-          </div>
-
-          <div className="flex items-center space-x-4">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              <span className="absolute -top-1 -right-1 h-4 w-4 bg-warning text-warning-foreground text-xs rounded-full flex items-center justify-center">
-                3
-              </span>
-            </Button>
-
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-primary/10 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-primary" />
-                  </div>
-                  <div className="text-left hidden md:block">
-                    <p className="text-sm font-medium text-foreground">{currentUser.name}</p>
-                    <p className="text-xs text-muted-foreground capitalize">{currentUser.role}</p>
-                  </div>
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuItem className="flex items-center space-x-2">
-                  <User className="h-4 w-4" />
-                  <span>Profile</span>
-                </DropdownMenuItem>
-                <DropdownMenuItem className="flex items-center space-x-2">
-                  <Settings className="h-4 w-4" />
-                  <span>Settings</span>
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem 
-                  className="flex items-center space-x-2 text-destructive"
-                  onClick={onLogout}
-                >
-                  <LogOut className="h-4 w-4" />
-                  <span>Logout</span>
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
-          </div>
+          )}
         </div>
       </div>
-    </nav>
+    </header>
   );
 }

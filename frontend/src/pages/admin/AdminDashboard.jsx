@@ -36,12 +36,6 @@ export default function AdminDashboard() {
   const [activeView, setActiveView] = useState('overview');
   const [timeframe, setTimeframe] = useState('today');
 
-  const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    navigate('/login');
-  };
-
   const handleMoveJob = (jobId, newStatus) => {
     // In real app, this would update the job status via API
     console.log(`Moving job ${jobId} to ${newStatus}`);
@@ -52,7 +46,7 @@ export default function AdminDashboard() {
       <Sidebar />
       
       <div className="flex-1 flex flex-col">
-        <Navbar onLogout={handleLogout} />
+        <Navbar />
         
         <main className="flex-1 p-6 space-y-8">
           {/* Modern Header with View Switcher */}
@@ -144,7 +138,7 @@ export default function AdminDashboard() {
                 />
                 <RealtimeWidget
                   title="Revenue Today"
-                  value={`$${stats.todayRevenue}`}
+                  value={`${stats.todayRevenue}`}
                   icon={DollarSign}
                   change="+15% vs yesterday"
                   trend="up"
