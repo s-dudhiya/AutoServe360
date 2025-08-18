@@ -39,8 +39,8 @@ export function Sidebar({ collapsed }) {
       {/* Header */}
       <div className="flex items-center h-16 border-b border-gray-700 px-4 bg-gray-900">
         <div className="flex items-center space-x-3 mx-auto overflow-hidden">
-          <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
-            <Bike className="h-6 w-6 text-gray-900" />
+          <div className="w-7 h-7 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+            <Bike className="h-7 w-6 text-gray-900" />
           </div>
           {!collapsed && (
             <span className="text-lg font-bold text-yellow-400 whitespace-nowrap">

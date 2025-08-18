@@ -10,7 +10,7 @@ class User(models.Model):
     username = models.CharField(max_length=100, unique=True)
     full_name = models.CharField(max_length=100)
     email = models.EmailField(unique=True)
-    phone = models.IntegerField()
+    phone = models.BigIntegerField()
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     pin = models.IntegerField()
     def __str__(self):
@@ -20,7 +20,7 @@ class User(models.Model):
 # ---------------- Customers & Vehicles ----------------
 class Customer(models.Model):
     name = models.CharField(max_length=100)
-    phone = models.IntegerField()
+    phone = models.BigIntegerField()
     email = models.EmailField(blank=True, null=True)
 
     def __str__(self):
@@ -77,7 +77,7 @@ class ServiceTask(models.Model):
 
 # ---------------- Parts & Inventory ----------------
 class Part(models.Model):
-    part_id=models.IntegerField(primary_key=True)
+    # part_id=models.IntegerField(primary_key=True)
     name = models.CharField(max_length=100)
     stock_quantity = models.IntegerField(default=0)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -98,3 +98,15 @@ class Invoice(models.Model):
 
     def __str__(self):
         return f"Invoice for {self.jobcard}"
+
+# --- NEW MODEL TO TRACK PARTS USED ON A JOB ---
+class PartUsage(models.Model):
+    """This model records each time a part is used for a job."""
+    jobcard = models.ForeignKey(JobCard, on_delete=models.CASCADE, related_name="parts_used")
+    part = models.ForeignKey(Part, on_delete=models.PROTECT) # Protect part from being deleted if used
+    quantity_used = models.PositiveIntegerField(default=1)
+    # This is crucial: We store the price at the time of use for accurate billing.
+    price_at_time_of_use = models.DecimalField(max_digits=10, decimal_places=2)
+
+    def __str__(self):
+        return f"{self.quantity_used} x {self.part.name} for JobCard {self.jobcard.id}"

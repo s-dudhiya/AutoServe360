@@ -1,89 +1,67 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Calendar, Clock, User, Car, Phone } from "lucide-react";
+import { Calendar, User, Car } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const statusColors = {
-  'In Queue': 'bg-muted text-muted-foreground',
-  'Under Service': 'bg-primary/10 text-primary border-primary/20',
-  'Awaiting Parts': 'bg-warning/10 text-warning border-warning/20',
-  'QC': 'bg-secondary/10 text-secondary border-secondary/20',
-  'Completed': 'bg-success/10 text-success border-success/20'
+// Helper to format the date
+const formatDate = (dateString) => {
+  if (!dateString) return "Invalid Date";
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 };
 
-const priorityColors = {
-  'Low': 'bg-muted text-muted-foreground',
-  'Medium': 'bg-warning/10 text-warning border-warning/20',
-  'High': 'bg-destructive/10 text-destructive border-destructive/20'
-};
-
-export function JobCard({ job, onViewDetails, showMechanic = true }) {
-  const createdDate = new Date(job.createdAt).toLocaleDateString();
-  const estimatedDate = new Date(job.estimatedCompletion).toLocaleDateString();
+export function JobCard({ job, onViewDetails }) {
+  const statusColors = {
+    'In Queue': 'bg-blue-400/20 text-blue-400 border-blue-400/30',
+    'Under Service': 'bg-orange-400/20 text-orange-400 border-orange-400/30',
+    'Awaiting Parts': 'bg-yellow-400/20 text-yellow-400 border-yellow-400/30',
+    'QC': 'bg-purple-400/20 text-purple-400 border-purple-400/30',
+    'Completed': 'bg-green-400/20 text-green-400 border-green-400/30'
+  };
 
   return (
-    <Card variant="interactive" className="hover:shadow-medium transition-all duration-200">
+    <Card className="bg-gray-800 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 shadow-lg flex flex-col h-full">
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
-          <CardTitle className="text-lg font-semibold">{job.id}</CardTitle>
-          <div className="flex items-center space-x-2">
-            <Badge variant="outline" className={cn("border", priorityColors[job.priority])}>
-              {job.priority}
-            </Badge>
-            <Badge variant="outline" className={cn("border", statusColors[job.status])}>
-              {job.status}
-            </Badge>
-          </div>
+          <CardTitle className="text-lg font-semibold text-white">Job #{job.id}</CardTitle>
+          <Badge className={cn("border", statusColors[job.status])}>
+            {job.status}
+          </Badge>
         </div>
       </CardHeader>
 
-      <CardContent className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm">
-              <User className="h-4 w-4 text-muted-foreground" />
-              <span className="font-medium">{job.customerName}</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Phone className="h-4 w-4" />
-              <span>{job.customerPhone}</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Car className="h-4 w-4" />
-              <span>{job.vehicleBrand} {job.vehicleModel} ({job.vehicleNumber})</span>
-            </div>
+      <CardContent className="space-y-4 flex-1 flex flex-col">
+        <div className="space-y-2 flex-1">
+          <div className="flex items-center space-x-2 text-sm text-gray-300">
+            <User className="h-4 w-4 text-gray-400" />
+            <span className="font-medium">{job.customerName}</span>
           </div>
-
-          <div className="space-y-2">
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Calendar className="h-4 w-4" />
-              <span>Created: {createdDate}</span>
-            </div>
-            <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-              <Clock className="h-4 w-4" />
-              <span>Due: {estimatedDate}</span>
-            </div>
-            {showMechanic && job.assignedMechanic && (
-              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <User className="h-4 w-4" />
-                <span>Mechanic: {job.assignedMechanic}</span>
-              </div>
-            )}
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Car className="h-4 w-4" />
+            <span>{job.vehicleBrand} {job.vehicleModel} ({job.vehicleNumber})</span>
+          </div>
+          <div className="flex items-center space-x-2 text-sm text-gray-400">
+            <Calendar className="h-4 w-4" />
+            {/* Correctly formatted date */}
+            <span>Created: {formatDate(job.created_at)}</span>
           </div>
         </div>
 
-        <div className="bg-muted/50 rounded-lg p-3">
-          <h4 className="font-medium text-sm mb-1">{job.serviceType}</h4>
-          <p className="text-sm text-muted-foreground">{job.description}</p>
+        <div className="bg-gray-900/50 rounded-lg p-3">
+          <h4 className="font-medium text-sm mb-1 text-white">{job.serviceType || 'General Service'}</h4>
         </div>
 
         {onViewDetails && (
           <div className="flex justify-end pt-2">
-            <Button
-              variant="outline"
+            <Button 
+              variant="outline" 
               size="sm"
               onClick={() => onViewDetails(job.id)}
+              className="border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10"
             >
               View Details
             </Button>

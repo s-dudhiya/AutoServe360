@@ -23,7 +23,7 @@ export function MainLayout() {
 
       <div
         className={cn(
-          "flex-1 flex flex-col overflow-hidden transition-all duration-300"
+          "flex-1 flex flex-col transition-all duration-300"
         )}
         style={{
           marginLeft: sidebarCollapsed ? "4rem" : "16rem",
@@ -35,10 +35,13 @@ export function MainLayout() {
           toggleSidebar={toggleSidebar}
         />
 
-        <ScrollArea className="flex-1 p-6 pt-20 bg-gray-900">
-          <Outlet />
+        <ScrollArea className="flex-1 bg-gray-900">
+          <div className="p-6 pt-20 h-full">
+            <Outlet />
+          </div>
         </ScrollArea>
       </div>
     </div>
   );
 }
+

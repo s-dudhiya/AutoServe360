@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   CardContent,
@@ -13,249 +13,211 @@ import {
   Package,
   Plus,
   AlertTriangle,
-  TrendingDown,
   DollarSign,
-  Bike,
-  Cog,
-  Wrench
+  Edit,
+  Trash2,
+  Loader2,
+  Wrench,
 } from "lucide-react";
-import { mockInventory, getLowStockItems } from "@/utils/mockData";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { toast } from "sonner";
+import { PartFormModal } from "@/components/inventory/PartFormModal";
+import { IssuePartModal } from "@/components/inventory/IssuePartModal";
 
-// This component is now clean. It ONLY renders the content for the Inventory page.
-// All layout (Sidebar, Navbar, margins, etc.) is handled by MainLayout.jsx.
 export default function InventoryPage() {
   const navigate = useNavigate();
+  
+  const [inventory, setInventory] = useState([]);
+  const [activeJobs, setActiveJobs] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState(null);
+
   const [searchTerm, setSearchTerm] = useState("");
-  const lowStockItems = getLowStockItems();
+  const [isPartFormModalOpen, setIsPartFormModalOpen] = useState(false);
+  const [isIssueModalOpen, setIsIssueModalOpen] = useState(false);
+  const [editingPart, setEditingPart] = useState(null);
 
-  const filteredInventory = mockInventory.filter(
-    (item) =>
-      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.supplier.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const fetchData = async () => {
+    setIsLoading(true);
+    try {
+      const [partsResponse, jobsResponse] = await Promise.all([
+        axios.get("http://127.0.0.1:8000/api/parts/"),
+        axios.get("http://127.0.0.1:8000/api/jobcards/")
+      ]);
+      
+      setInventory(partsResponse.data);
+      
+      const activeJobCards = jobsResponse.data.filter(job => job.status !== 'done').map(job => ({
+          ...job,
+          id: job.id.toString(),
+          customerName: job.customer?.name || 'N/A',
+          vehicleNumber: job.vehicle?.registration_no || 'N/A',
+      }));
+      setActiveJobs(activeJobCards);
 
-  const totalValue = mockInventory.reduce(
-    (total, item) => total + item.stock * item.price,
-    0
+    } catch (err) {
+      setError("Failed to fetch data. Please ensure the server is running.");
+      console.error(err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const handleAddNew = () => {
+    setEditingPart(null);
+    setIsPartFormModalOpen(true);
+  };
+
+  const handleEdit = (part) => {
+    setEditingPart(part);
+    setIsPartFormModalOpen(true);
+  };
+
+  const handleDelete = async (partId) => {
+    if (window.confirm("Are you sure you want to delete this part? This action cannot be undone.")) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/parts/${partId}/`);
+        toast.success("Part deleted successfully!");
+        fetchData();
+      } catch (err) {
+        toast.error("Failed to delete part. It may be in use on a job card.");
+        console.error(err);
+      }
+    }
+  };
+
+  const handleSavePart = async (formData) => {
+    try {
+      if (editingPart) {
+        await axios.put(`http://127.0.0.1:8000/api/parts/${editingPart.id}/`, formData);
+        toast.success("Part updated successfully!");
+      } else {
+        await axios.post("http://127.0.0.1:8000/api/parts/", formData);
+        toast.success("Part added successfully!");
+      }
+      setIsPartFormModalOpen(false);
+      fetchData();
+    } catch (err) {
+      const errorMessage = err.response?.data?.name?.[0] || "Failed to save part.";
+      toast.error(errorMessage);
+      console.error(err.response?.data || err);
+    }
+  };
+
+  const handleIssueSuccess = () => {
+    setIsIssueModalOpen(false);
+    fetchData();
+  };
+
+  // --- THIS IS THE FIX ---
+  // The logic now directly checks if the stock quantity is less than or equal to 5.
+  const lowStockItems = inventory.filter(item => item.stock_quantity <= 5);
+  
+  const totalValue = inventory.reduce((total, item) => total + (item.stock_quantity * parseFloat(item.unit_price)), 0);
+  const filteredInventory = inventory.filter(item =>
+    item.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
-    // The component now returns a single div with its content.
-    // All Sidebar, Navbar, and layout state has been removed.
-    <div className="w-full space-y-6">
-      {/* Header */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">
-            Parts Inventory Management
-          </h1>
-          <p className="text-gray-400">
-            Track bike parts and service supplies inventory
-          </p>
+    <>
+      <PartFormModal 
+        isOpen={isPartFormModalOpen}
+        onClose={() => setIsPartFormModalOpen(false)}
+        onSave={handleSavePart}
+        part={editingPart}
+      />
+      <IssuePartModal
+        isOpen={isIssueModalOpen}
+        onClose={() => setIsIssueModalOpen(false)}
+        onSuccess={handleIssueSuccess}
+        inventory={inventory}
+        activeJobs={activeJobs}
+      />
+      <div className="w-full space-y-6">
+        {/* Header */}
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">
+              Parts Inventory Management
+            </h1>
+            <p className="text-gray-400">Track bike parts and service supplies inventory</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button onClick={() => setIsIssueModalOpen(true)} variant="outline" className="border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10 flex items-center space-x-2">
+              <Wrench className="h-4 w-4" />
+              <span>Issue Part to Job</span>
+            </Button>
+            <Button onClick={handleAddNew} className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg flex items-center space-x-2">
+              <Plus className="h-4 w-4" />
+              <span>Add New Part</span>
+            </Button>
+          </div>
         </div>
-        <Button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-lg flex items-center space-x-2 transform hover:scale-105 transition-all duration-300">
-          <Plus className="h-4 w-4" />
-          <span>Add New Part</span>
-        </Button>
-      </div>
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <Card className="bg-gray-800 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">
-                  Total Parts
-                </p>
-                <p className="text-2xl font-bold text-white">
-                  {mockInventory.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-yellow-400/20 rounded-lg flex items-center justify-center">
-                <Package className="h-6 w-6 text-yellow-400" />
+        {/* Summary Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <Card className="bg-gray-800 border border-gray-700 shadow-lg"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-400">Total Unique Parts</p><p className="text-2xl font-bold text-white">{inventory.length}</p></div><div className="w-12 h-12 bg-yellow-400/20 rounded-lg flex items-center justify-center"><Package className="h-6 w-6 text-yellow-400" /></div></div></CardContent></Card>
+            <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-400/30 shadow-lg"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-400">Low Stock Parts</p><p className="text-2xl font-bold text-orange-400">{lowStockItems.length}</p></div><div className="w-12 h-12 bg-orange-400/20 rounded-lg flex items-center justify-center"><AlertTriangle className="h-6 w-6 text-orange-400" /></div></div></CardContent></Card>
+            <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-400/30 shadow-lg"><CardContent className="p-6"><div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-400">Total Stock Value</p><p className="text-2xl font-bold text-green-400">₹{totalValue.toFixed(2)}</p></div><div className="w-12 h-12 bg-green-400/20 rounded-lg flex items-center justify-center"><DollarSign className="h-6 w-6 text-green-400" /></div></div></CardContent></Card>
+        </div>
+
+        {/* Inventory Table */}
+        <Card className="bg-gray-800 border border-gray-700 shadow-lg">
+          <CardHeader>
+            <div className="flex justify-between items-center">
+              <CardTitle className="text-yellow-400">Inventory Items</CardTitle>
+              <div className="relative w-full max-w-sm">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input placeholder="Search parts..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 bg-gray-900 text-white border-gray-700" />
               </div>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-400/30 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">
-                  Low Stock Parts
-                </p>
-                <p className="text-2xl font-bold text-orange-400">
-                  {lowStockItems.length}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-orange-400/20 rounded-lg flex items-center justify-center">
-                <AlertTriangle className="h-6 w-6 text-orange-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-green-500/10 to-green-600/10 border border-green-400/30 shadow-lg">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-gray-400">
-                  Total Value
-                </p>
-                <p className="text-2xl font-bold text-green-400">
-                  ₹{totalValue.toFixed(2)}
-                </p>
-              </div>
-              <div className="w-12 h-12 bg-green-400/20 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-green-400" />
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* Search and Inventory Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2">
-          <Card className="bg-gray-800 border border-gray-700 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-yellow-400">
-                <Bike className="h-5 w-5" />
-                <span>Bike Parts Inventory</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Search parts, categories, or suppliers..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10 bg-gray-900 text-white border-gray-700 focus:border-yellow-400 focus:ring-yellow-400/20"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  {filteredInventory.map((item) => (
-                    <Card key={item.id} className="bg-gray-900/50 border border-gray-700 hover:border-yellow-400/50 transition-all duration-300 p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3">
-                            <div className="w-8 h-8 bg-yellow-400/20 rounded-lg flex items-center justify-center">
-                              <Cog className="h-4 w-4 text-yellow-400" />
-                            </div>
-                            <h3 className="font-semibold text-white">
-                              {item.name}
-                            </h3>
-                            <Badge className="bg-gray-700 text-gray-300 text-xs">
-                              {item.category}
-                            </Badge>
-                            {item.stock <= item.minStock && (
-                              <Badge className="bg-orange-400/20 border border-orange-400/30 text-orange-400 text-xs">
-                                <TrendingDown className="h-3 w-3 mr-1" />
-                                Low Stock
-                              </Badge>
-                            )}
+          </CardHeader>
+          <CardContent>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="border-b border-gray-700">
+                    <th className="p-4 text-sm font-semibold text-gray-400">Part Name</th>
+                    <th className="p-4 text-sm font-semibold text-gray-400 text-center">Stock</th>
+                    <th className="p-4 text-sm font-semibold text-gray-400 text-right">Price</th>
+                    <th className="p-4 text-sm font-semibold text-gray-400 text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {isLoading ? (
+                    <tr><td colSpan="4" className="text-center p-8"><Loader2 className="h-8 w-8 animate-spin mx-auto text-yellow-400" /></td></tr>
+                  ) : error ? (
+                     <tr><td colSpan="4" className="text-center p-8 text-red-400">{error}</td></tr>
+                  ) : (
+                    filteredInventory.map(item => (
+                      <tr key={item.id} className={`border-b border-gray-700 ${item.stock_quantity <= 5 ? 'bg-orange-500/10' : ''}`}>
+                        <td className="p-4 font-medium text-white">{item.name}</td>
+                        <td className="p-4 text-center">
+                          <Badge className={item.stock_quantity <= 5 ? 'bg-orange-400/20 text-orange-400' : 'bg-green-400/20 text-green-400'}>
+                            {item.stock_quantity}
+                          </Badge>
+                        </td>
+                        <td className="p-4 text-right font-mono text-white">₹{item.unit_price}</td>
+                        <td className="p-4 text-center">
+                          <div className="flex justify-center gap-2">
+                            <Button variant="ghost" size="icon" onClick={() => handleEdit(item)} className="text-blue-400 hover:bg-blue-400/10"><Edit className="h-4 w-4" /></Button>
+                            <Button variant="ghost" size="icon" onClick={() => handleDelete(item.id)} className="text-red-400 hover:bg-red-400/10"><Trash2 className="h-4 w-4" /></Button>
                           </div>
-                          <p className="text-sm text-gray-400 mt-1 ml-11">
-                            Supplier: {item.supplier}
-                          </p>
-                        </div>
-
-                        <div className="text-right space-y-1">
-                          <div className="flex items-center space-x-4">
-                            <div>
-                              <p className="text-sm text-gray-400">Stock</p>
-                              <p className={`font-semibold ${
-                                item.stock <= item.minStock
-                                  ? "text-orange-400"
-                                  : "text-white"
-                              }`}>
-                                {item.stock}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-400">Min</p>
-                              <p className="font-semibold text-white">
-                                {item.minStock}
-                              </p>
-                            </div>
-                            <div>
-                              <p className="text-sm text-gray-400">Price</p>
-                              <p className="font-semibold text-white">
-                                ₹{item.price}
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Low Stock Alert Sidebar */}
-        <div>
-          <Card className="bg-gradient-to-br from-orange-500/10 to-orange-600/10 border border-orange-400/30 shadow-lg">
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2 text-orange-400">
-                <AlertTriangle className="h-5 w-5" />
-                <span>Critical Stock Alert</span>
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-3">
-              {lowStockItems.map((item) => (
-                <div
-                  key={item.id}
-                  className="p-3 bg-gray-800/50 rounded-lg border border-gray-700 hover:border-orange-400/50 transition-all duration-300"
-                >
-                  <div className="flex justify-between items-start">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-1">
-                        <Wrench className="h-3 w-3 text-orange-400" />
-                        <p className="font-medium text-sm text-white">{item.name}</p>
-                      </div>
-                      <p className="text-xs text-gray-400">
-                        {item.category}
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-orange-400">
-                        {item.stock} left
-                      </p>
-                      <p className="text-xs text-gray-400">
-                        Min: {item.minStock}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              ))}
-
-              {lowStockItems.length === 0 && (
-                <div className="text-center py-6">
-                  <Package className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-sm text-gray-400">
-                    All parts are well stocked!
-                  </p>
-                </div>
-              )}
-
-              <Button className="w-full bg-gradient-to-r from-orange-400 to-orange-600 text-white hover:from-orange-500 hover:to-orange-700 transition-all duration-300">
-                <Plus className="h-4 w-4 mr-2" />
-                Reorder Parts
-              </Button>
-            </CardContent>
-          </Card>
-        </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-    </div>
+    </>
   );
 }

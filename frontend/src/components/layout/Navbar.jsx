@@ -44,7 +44,7 @@ export function Navbar({ sidebarCollapsed, toggleSidebar }) {
           <Menu className="h-6 w-6 text-gray-300 group-hover:text-yellow-400 transition-colors duration-200" />
         </button>
         <div className="flex items-center space-x-3">
-          <Bike className="h-6 w-6 text-yellow-400" />
+          {/* <Bike className="h-6 w-6 text-yellow-400" /> */}
           <span className="text-xl font-semibold text-white select-none">
             {user?.role === "admin" ? "Admin Dashboard" : "Mechanic Panel"}
           </span>
