@@ -1,7 +1,7 @@
 # serializers.py
 from rest_framework import serializers
 from django.db import transaction
-from .models import User, Customer, Vehicle, JobCard, ServiceTask, Part, PartUsage
+from .models import User, Customer, Vehicle, JobCard, ServiceTask, Part, PartUsage, Invoice
 
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
@@ -176,3 +176,19 @@ class JobCardDetailSerializer(serializers.ModelSerializer):
             'id', 'customer', 'vehicle', 'status', 
             'assigned_mechanic', 'created_at', 'tasks', 'parts_used'
         ]
+
+# --- NEW: Serializer for displaying Invoice details ---
+class InvoiceDetailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = '__all__'
+
+# --- NEW: Serializer for creating an Invoice ---
+# This serializer only takes the fields an admin can input.
+# The rest are calculated automatically on the backend.
+class InvoiceCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Invoice
+        fields = ['labor_charge', 'discount', 'tax']
+        # Tax will be calculated, but we allow it to be passed for potential overrides
+        required_fields = ['labor_charge', 'discount']

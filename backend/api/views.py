@@ -4,9 +4,9 @@ from rest_framework.response import Response
 from rest_framework import status,generics
 from django.db import transaction
 from django.shortcuts import get_object_or_404
-from .models import User, Vehicle, JobCard, Part, PartUsage
+from .models import User, Vehicle, JobCard, Part, PartUsage,Invoice
 from .serializers import( LoginSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
-                         JobCardListSerializer,JobCardDetailSerializer, PartSerializer,  PartUsageSerializer)
+                         JobCardListSerializer,JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer )
 
 class LoginView(APIView):
     def post(self, request):
@@ -133,3 +133,59 @@ class IssuePartAPIView(APIView):
                 return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class InvoiceCreateAPIView(APIView):
+    """
+    Creates an Invoice for a given JobCard.
+    This endpoint calculates totals and applies fixed business logic.
+    """
+    def post(self, request, pk, *args, **kwargs):
+        jobcard = get_object_or_404(JobCard, pk=pk)
+
+        # 1. Prevent creating a duplicate invoice
+        if hasattr(jobcard, 'invoice'):
+            return Response(
+                {"error": "An invoice already exists for this job card."},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Use a database transaction for this critical financial operation
+        try:
+            with transaction.atomic():
+                # 2. Calculate the total cost of parts used
+                parts_total = sum(
+                    usage.price_at_time_of_use * usage.quantity_used 
+                    for usage in jobcard.parts_used.all()
+                )
+
+                # 3. Get labor and discount from request, with defaults
+                labor_charge = Decimal(request.data.get('labor_charge', '533.00'))
+                discount = Decimal(request.data.get('discount', '0.00'))
+
+                # 4. Calculate subtotal and GST (12%)
+                subtotal = parts_total + labor_charge
+                gst_amount = subtotal * Decimal('0.12')
+
+                # 5. Calculate the final total amount
+                total_amount = subtotal + gst_amount - discount
+
+                # 6. Create the Invoice instance
+                invoice = Invoice.objects.create(
+                    jobcard=jobcard,
+                    labor_charge=labor_charge,
+                    parts_total=parts_total,
+                    tax=gst_amount,
+                    discount=discount,
+                    total_amount=total_amount
+                )
+
+                # Optional: Update job card status to 'done' if it's not already
+                if jobcard.status != 'done':
+                    jobcard.status = 'done'
+                    jobcard.save()
+
+                serializer = InvoiceDetailSerializer(invoice)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
