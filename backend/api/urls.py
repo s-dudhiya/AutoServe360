@@ -2,7 +2,7 @@
 from django.urls import path
 from .views import( LoginView, VehicleFindAPIView,
     MechanicListAPIView,JobCardListCreateAPIView,JobCardDetailAPIView,
-    PartListCreateAPIView,PartDetailAPIView,IssuePartAPIView,InvoiceCreateAPIView )
+    PartListCreateAPIView,PartDetailAPIView,IssuePartAPIView,InvoiceCreateAPIView,InvoicePDFView )
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
@@ -14,4 +14,5 @@ urlpatterns = [
     path('parts/<int:pk>/', PartDetailAPIView.as_view(), name='part-detail'),
     path('jobcards/<int:pk>/issue-part/', IssuePartAPIView.as_view(), name='jobcard-issue-part'),
     path('jobcards/<int:pk>/create-invoice/', InvoiceCreateAPIView.as_view(), name='jobcard-create-invoice'),
+    path('jobcards/<int:pk>/invoice-pdf/', InvoicePDFView.as_view(), name='jobcard-invoice-pdf'),
 ]

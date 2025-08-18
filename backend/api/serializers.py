@@ -134,12 +134,11 @@ class ServiceTaskSerializer(serializers.ModelSerializer):
 
 
 
-# This handles creating, listing, and updating parts in the inventory.
+
 class PartSerializer(serializers.ModelSerializer):
     class Meta:
         model = Part
         fields = ['id', 'name', 'stock_quantity', 'unit_price']
-        # Make name read-only on update to prevent changing it accidentally
         read_only_fields = ['id']
 
     def validate_stock_quantity(self, value):
@@ -152,30 +151,43 @@ class PartSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Unit price cannot be negative.")
         return value
 
-# This is used specifically when an admin gives a part to a mechanic for a job.
+# --- THIS IS THE CORRECTED SERIALIZER ---
+# It now uses direct nesting, which is the standard and correct way to handle this.
 class PartUsageSerializer(serializers.ModelSerializer):
-    # We only need the part ID and quantity from the frontend for this action.
-    part_id = serializers.IntegerField(write_only=True)
+    part = PartSerializer(read_only=True) # Directly nest the PartSerializer
+    part_id = serializers.IntegerField(write_only=True, required=False)
 
     class Meta:
         model = PartUsage
-        fields = ['part_id', 'quantity_used']
-        read_only_fields = ['id', 'jobcard', 'part', 'price_at_time_of_use']
+        fields = ['id', 'part', 'part_id', 'quantity_used', 'price_at_time_of_use']
 
 class JobCardDetailSerializer(serializers.ModelSerializer):
     customer = CustomerSerializer(read_only=True)
     vehicle = VehicleSerializer(read_only=True)
     assigned_mechanic = serializers.StringRelatedField()
     tasks = ServiceTaskSerializer(many=True, read_only=True)
-    # This will now show a list of parts used on this job card
-    parts_used = PartUsageSerializer(many=True, read_only=True, source='parts_used.all')
+    parts_used = PartUsageSerializer(many=True, read_only=True)
+    
+    # --- FIX: Changed to a SerializerMethodField for reliability ---
+    invoice = serializers.SerializerMethodField()
 
     class Meta:
         model = JobCard
         fields = [
             'id', 'customer', 'vehicle', 'status', 
-            'assigned_mechanic', 'created_at', 'tasks', 'parts_used'
+            'assigned_mechanic', 'created_at', 'tasks', 'parts_used', 'invoice'
         ]
+
+    def get_invoice(self, obj):
+        """
+        This method explicitly checks if the related invoice exists.
+        'hasattr' is a safe way to check without causing an exception.
+        If the invoice exists, it is serialized and returned. Otherwise, it returns None.
+        This guarantees the frontend condition `job.invoice` will work correctly.
+        """
+        if hasattr(obj, 'invoice'):
+            return InvoiceDetailSerializer(obj.invoice).data
+        return None
 
 # --- NEW: Serializer for displaying Invoice details ---
 class InvoiceDetailSerializer(serializers.ModelSerializer):

@@ -28,7 +28,7 @@ export function Navbar({ sidebarCollapsed, toggleSidebar }) {
 
   return (
     <header
-      className="fixed top-0 h-16 bg-gray-800 border-b border-gray-700 shadow-xl z-[51] flex items-center justify-between px-6"
+      className="fixed top-0 h-16 bg-gray-800 border-b border-gray-700 shadow-xl z-[45] flex items-center justify-between px-6"
       style={{
         left: sidebarCollapsed ? "4rem" : "16rem",
         transition: "left 0.3s ease-in-out",

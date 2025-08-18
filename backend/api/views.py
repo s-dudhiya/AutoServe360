@@ -1,9 +1,13 @@
 # views.py
+from django.http import HttpResponse
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status,generics
 from django.db import transaction
+from decimal import Decimal 
 from django.shortcuts import get_object_or_404
+
+from .utils import generate_invoice_pdf
 from .models import User, Vehicle, JobCard, Part, PartUsage,Invoice
 from .serializers import( LoginSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
                          JobCardListSerializer,JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer )
@@ -68,11 +72,22 @@ class JobCardListCreateAPIView(generics.ListCreateAPIView):
         return JobCardListSerializer
 
 class JobCardDetailAPIView(generics.RetrieveAPIView):
-    """
-    Provides detailed view for a single Job Card, including its tasks.
-    """
-    queryset = JobCard.objects.all()
     serializer_class = JobCardDetailSerializer
+
+    def get_queryset(self):
+        """
+        Optimize the query to pre-fetch all related data needed for the detail view.
+        This is more efficient than the default and ensures all data is included.
+        """
+        return JobCard.objects.prefetch_related(
+            'tasks',
+            'parts_used__part'  # This is the key fix: It fetches all PartUsage records AND the related Part for each.
+        ).select_related(
+            'customer',
+            'vehicle',
+            'assigned_mechanic',
+            'invoice' # Also pre-fetch the invoice if it exists
+        ).all()
 
 # --- NEW: API Views for managing Parts inventory ---
 
@@ -189,3 +204,24 @@ class InvoiceCreateAPIView(APIView):
 
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+# --- NEW: API View for downloading an Invoice PDF ---
+class InvoicePDFView(APIView):
+    """
+    Generates and serves a PDF for a specific invoice.
+    """
+    def get(self, request, pk, *args, **kwargs):
+        # The 'pk' here is the JobCard ID.
+        jobcard = get_object_or_404(JobCard.objects.select_related('invoice'), pk=pk)
+        
+        if not hasattr(jobcard, 'invoice'):
+            return Response({"error": "Invoice not found for this job card."}, status=status.HTTP_404_NOT_FOUND)
+
+        invoice = jobcard.invoice
+        pdf_buffer = generate_invoice_pdf(invoice)
+        
+        response = HttpResponse(pdf_buffer, content_type='application/pdf')
+        # This header tells the browser to open a download dialog
+        response['Content-Disposition'] = f'attachment; filename="invoice-{invoice.id}.pdf"'
+        
+        return response
