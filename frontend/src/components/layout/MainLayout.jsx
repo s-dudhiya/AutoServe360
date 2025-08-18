@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
 import { Navbar } from "./Navbar";
 import { cn } from "@/lib/utils";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 /**
  * MainLayout component
@@ -34,9 +35,9 @@ export function MainLayout() {
           toggleSidebar={toggleSidebar}
         />
 
-        <main className="flex-1 overflow-y-auto p-6 pt-20 bg-gray-900">
+        <ScrollArea className="flex-1 p-6 pt-20 bg-gray-900">
           <Outlet />
-        </main>
+        </ScrollArea>
       </div>
     </div>
   );
