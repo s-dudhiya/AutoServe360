@@ -54,7 +54,17 @@ export default function Login() {
       });
 
       const data = response.data;
-      login(data);
+      
+      // --- THIS IS THE FIX ---
+      // We create a new object that includes the username from the form
+      // along with the role and email from the API response.
+      const userData = {
+        ...data, // Contains role and email from the API
+        username: formData.username // Add the username from the form state
+      };
+
+      // Pass the complete userData object to the login function.
+      login(userData);
 
       if (from) {
         navigate(from, { replace: true });
