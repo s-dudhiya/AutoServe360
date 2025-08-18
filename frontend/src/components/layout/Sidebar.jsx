@@ -1,4 +1,4 @@
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   FileText,
@@ -6,9 +6,10 @@ import {
   BarChart3,
   Bell,
   Wrench,
+  Bike,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getCurrentUser } from "@/utils/mockData";
+import { useAuth } from "../../context/AuthContext";
 
 const adminNavItems = [
   { title: "Dashboard", path: "/admin", icon: LayoutDashboard },
@@ -23,44 +24,55 @@ const mechanicNavItems = [
   { title: "Notifications", path: "/mechanic/notifications", icon: Bell },
 ];
 
-export  function Sidebar({ collapsed }) {
-  const location = useLocation();
-  const currentUser = getCurrentUser();
-  const navItems = currentUser.role === "admin" ? adminNavItems : mechanicNavItems;
+export function Sidebar({ collapsed }) {
+  const { user } = useAuth();
+  
+  const navItems = user?.role === "admin" ? adminNavItems : mechanicNavItems;
 
   return (
     <aside
       className={cn(
-        "fixed top-0 left-0 h-full bg-card border-r border-border shadow-soft z-50 flex flex-col transition-all duration-300",
+        "fixed top-0 left-0 h-full bg-gray-800 border-r border-gray-700 shadow-2xl z-50 flex flex-col transition-all duration-300 ease-in-out",
         collapsed ? "w-16" : "w-64"
       )}
     >
-      <div className="flex items-center h-16 border-b border-border px-4">
-        <div className="flex items-center space-x-3 mx-auto">
-          <div className="w-10 h-10 bg-gradient-primary rounded-lg flex items-center justify-center">
-            <span className="text-primary-foreground font-bold">A360</span>
+      {/* Header */}
+      <div className="flex items-center h-16 border-b border-gray-700 px-4 bg-gray-900">
+        <div className="flex items-center space-x-3 mx-auto overflow-hidden">
+          <div className="w-10 h-10 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-lg flex items-center justify-center flex-shrink-0 shadow-lg">
+            <Bike className="h-6 w-6 text-gray-900" />
           </div>
           {!collapsed && (
-            <span className="text-lg font-bold text-foreground">AutoServe 360</span>
+            <span className="text-lg font-bold text-yellow-400 whitespace-nowrap">
+              AutoServe 360
+            </span>
           )}
         </div>
       </div>
 
-      <nav className="flex-1 px-2 py-6 space-y-2 overflow-y-auto">
+      {/* Navigation */}
+      <nav className="flex-1 px-2 py-6 space-y-2 overflow-y-auto bg-gray-800">
         {navItems.map((item) => {
-          const isActive = location.pathname === item.path;
           return (
             <NavLink
               key={item.path}
               to={item.path}
-              className={cn(
-                "flex items-center space-x-3 px-3 py-2 rounded-lg transition-all duration-200",
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-medium"
-                  : "text-muted-foreground hover:bg-accent hover:text-accent-foreground hover:shadow-soft"
-              )}
+              end // This prop ensures the link is only active for exact URL matches.
+              className={({ isActive }) => // Use NavLink's built-in isActive state
+                cn(
+                  "flex items-center space-x-3 px-3 py-3 rounded-lg transition-all duration-200 group",
+                  isActive
+                    ? "bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 shadow-lg"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-yellow-400",
+                  collapsed && "justify-center"
+                )
+              }
+              title={collapsed ? item.title : undefined}
             >
-              <item.icon className="h-5 w-5" />
+              <item.icon className={cn(
+                "h-5 w-5 flex-shrink-0 transition-transform duration-200",
+                "group-hover:scale-110" // The hover effect is now applied correctly
+              )} />
               {!collapsed && (
                 <span className="font-medium select-none">{item.title}</span>
               )}
@@ -68,6 +80,15 @@ export  function Sidebar({ collapsed }) {
           );
         })}
       </nav>
+
+      {/* Footer */}
+      {!collapsed && (
+        <div className="p-4 border-t border-gray-700 bg-gray-900">
+          <div className="text-center">
+            <p className="text-xs text-gray-400">Two-Wheeler Service Pro</p>
+          </div>
+        </div>
+      )}
     </aside>
   );
 }

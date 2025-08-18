@@ -1,13 +1,11 @@
 import { useState } from "react";
-import { Navbar } from "@/components/layout/Navbar";
-import { Sidebar } from "@/components/layout/Sidebar";
 import { AnalyticsPanel } from "@/components/dashboard/AnalyticsPanel";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-  BarChart3, 
+import {
+  BarChart3,
   TrendingUp,
   DollarSign,
   FileText,
@@ -18,30 +16,26 @@ import {
   Users,
   Wrench,
   Clock,
-  CheckCircle
+  CheckCircle,
 } from "lucide-react";
 import { getStatsOverview } from "@/utils/mockData";
 import { useNavigate } from "react-router-dom";
 
+// This component is now clean. It ONLY renders the content for the Reports page.
+// All layout is handled by MainLayout.jsx.
 export default function ReportsPage() {
   const navigate = useNavigate();
-  const [timeframe, setTimeframe] = useState('month');
+  const [timeframe, setTimeframe] = useState("month");
   const stats = getStatsOverview();
-
-  const handleLogout = () => {
-    localStorage.removeItem('userRole');
-    localStorage.removeItem('userEmail');
-    navigate('/login');
-  };
 
   const kpiData = [
     {
       title: "Total Revenue",
-      value: "$45,230",
+      value: "₹45,230",
       change: "+12.5%",
       trend: "up",
       icon: DollarSign,
-      color: "success"
+      color: "success",
     },
     {
       title: "Jobs Completed",
@@ -49,7 +43,7 @@ export default function ReportsPage() {
       change: "+8.2%",
       trend: "up",
       icon: CheckCircle,
-      color: "primary"
+      color: "primary",
     },
     {
       title: "Avg. Service Time",
@@ -57,7 +51,7 @@ export default function ReportsPage() {
       change: "-5.1%",
       trend: "down",
       icon: Clock,
-      color: "warning"
+      color: "warning",
     },
     {
       title: "Customer Satisfaction",
@@ -65,7 +59,7 @@ export default function ReportsPage() {
       change: "+0.3",
       trend: "up",
       icon: Target,
-      color: "success"
+      color: "success",
     },
     {
       title: "Active Technicians",
@@ -73,7 +67,7 @@ export default function ReportsPage() {
       change: "+2",
       trend: "up",
       icon: Users,
-      color: "secondary"
+      color: "secondary",
     },
     {
       title: "Equipment Utilization",
@@ -81,8 +75,8 @@ export default function ReportsPage() {
       change: "+4.2%",
       trend: "up",
       icon: Activity,
-      color: "accent"
-    }
+      color: "accent",
+    },
   ];
 
   const reportTypes = [
@@ -91,169 +85,236 @@ export default function ReportsPage() {
       description: "Revenue, costs, and profitability analysis",
       icon: DollarSign,
       color: "success",
-      period: "Monthly"
+      period: "Monthly",
     },
     {
       title: "Operations Report",
       description: "Job completion, efficiency, and workflow metrics",
       icon: Wrench,
       color: "primary",
-      period: "Weekly"
+      period: "Weekly",
     },
     {
       title: "Customer Report",
       description: "Customer satisfaction and service quality",
       icon: Users,
       color: "secondary",
-      period: "Monthly"
+      period: "Monthly",
     },
     {
       title: "Performance Report",
       description: "Technician performance and productivity",
       icon: TrendingUp,
       color: "accent",
-      period: "Monthly"
-    }
+      period: "Monthly",
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex">
-      <Sidebar />
-      
-      <div className="flex-1 flex flex-col">
-        <Navbar onLogout={handleLogout} />
-        
-        <main className="flex-1 p-6 space-y-8">
-          {/* Header */}
-          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
-            <div className="space-y-2">
-              <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 bg-gradient-accent rounded-xl flex items-center justify-center animate-pulse">
-                  <BarChart3 className="h-6 w-6 text-primary" />
+    // The component now returns a single div with its content.
+    // All Sidebar, Navbar, and layout state has been removed.
+    <div className="w-full space-y-8">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:justify-between lg:items-center space-y-4 lg:space-y-0">
+        <div className="flex items-center space-x-3">
+          <div className="w-12 h-12 bg-gradient-to-r from-yellow-400 to-yellow-600 rounded-xl flex items-center justify-center">
+            <BarChart3 className="h-6 w-6 text-gray-900" />
+          </div>
+          <div>
+            <h1 className="text-4xl font-black text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">
+              Analytics & Reports
+            </h1>
+            <p className="text-gray-400 text-lg">
+              Business insights and garage performance
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center space-x-3">
+          <Tabs value={timeframe} onValueChange={setTimeframe}>
+            <TabsList className="bg-gray-800 border border-gray-700">
+              <TabsTrigger
+                value="today"
+                className="data-[state=active]:bg-yellow-400 data-[state=active]:text-gray-900"
+              >
+                Today
+              </TabsTrigger>
+              <TabsTrigger
+                value="week"
+                className="data-[state=active]:bg-yellow-400 data-[state=active]:text-gray-900"
+              >
+                Week
+              </TabsTrigger>
+              <TabsTrigger
+                value="month"
+                className="data-[state=active]:bg-yellow-400 data-[state=active]:text-gray-900"
+              >
+                Month
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+          <Button
+            variant="outline"
+            className="border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10 transition-all duration-300"
+          >
+            <Download className="h-4 w-4 mr-2" />
+            Export Data
+          </Button>
+        </div>
+      </div>
+
+      {/* KPI Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+        {kpiData.map((kpi, index) => (
+          <Card
+            key={index}
+            className="bg-gray-800 border border-gray-700 shadow-lg hover:border-yellow-400/50 transition-colors duration-300"
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-3">
+                <div
+                  className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    kpi.color === "success"
+                      ? "bg-green-400/20"
+                      : kpi.color === "primary"
+                      ? "bg-yellow-400/20"
+                      : kpi.color === "warning"
+                      ? "bg-orange-400/20"
+                      : kpi.color === "secondary"
+                      ? "bg-blue-400/20"
+                      : kpi.color === "accent"
+                      ? "bg-purple-400/20"
+                      : "bg-gray-700/20"
+                  }`}
+                >
+                  <kpi.icon
+                    className={`h-5 w-5 ${
+                      kpi.color === "success"
+                        ? "text-green-400"
+                        : kpi.color === "primary"
+                        ? "text-yellow-400"
+                        : kpi.color === "warning"
+                        ? "text-orange-400"
+                        : kpi.color === "secondary"
+                        ? "text-blue-400"
+                        : kpi.color === "accent"
+                        ? "text-purple-400"
+                        : "text-gray-400"
+                    }`}
+                  />
                 </div>
-                <div>
-                  <h1 className="text-4xl font-black bg-gradient-modern bg-clip-text text-transparent">
-                    Analytics & Reports
-                  </h1>
-                  <p className="text-muted-foreground text-lg">
-                    Business insights and performance metrics
-                  </p>
-                </div>
+                <Badge
+                  variant="outline"
+                  className={`text-xs ${
+                    kpi.trend === "up"
+                      ? "text-green-400 border-green-400/25"
+                      : kpi.trend === "down"
+                      ? "text-red-400 border-red-400/25"
+                      : "text-gray-400 border-gray-400/25"
+                  }`}
+                >
+                  <TrendingUp
+                    className={`h-3 w-3 mr-1 ${
+                      kpi.trend === "down" ? "rotate-180" : ""
+                    }`}
+                  />
+                  {kpi.change}
+                </Badge>
               </div>
-            </div>
-            <div className="flex items-center space-x-3">
-              <Tabs value={timeframe} onValueChange={(value) => setTimeframe(value)}>
-                <TabsList className="bg-muted/30">
-                  <TabsTrigger value="today">Today</TabsTrigger>
-                  <TabsTrigger value="week">Week</TabsTrigger>
-                  <TabsTrigger value="month">Month</TabsTrigger>
-                </TabsList>
-              </Tabs>
-              <Button variant="outline" className="border-secondary text-secondary hover:bg-secondary/10">
-                <Download className="h-4 w-4 mr-2" />
-                Export Data
-              </Button>
-            </div>
-          </div>
+              <div>
+                <p className="text-sm font-medium text-gray-400 mb-1">
+                  {kpi.title}
+                </p>
+                <p className="text-xl font-bold text-white">{kpi.value}</p>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
 
-          {/* KPI Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
-            {kpiData.map((kpi, index) => (
-              <Card key={index} variant="stats" className="hover:shadow-glow transition-all duration-300">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
-                      kpi.color === 'success' ? 'bg-success/20' :
-                      kpi.color === 'primary' ? 'bg-primary/20' :
-                      kpi.color === 'warning' ? 'bg-warning/20' :
-                      kpi.color === 'secondary' ? 'bg-secondary/20' :
-                      kpi.color === 'accent' ? 'bg-accent/20' :
-                      'bg-muted/20'
-                    }`}>
-                      <kpi.icon className={`h-5 w-5 ${
-                        kpi.color === 'success' ? 'text-success' :
-                        kpi.color === 'primary' ? 'text-primary' :
-                        kpi.color === 'warning' ? 'text-warning' :
-                        kpi.color === 'secondary' ? 'text-secondary' :
-                        kpi.color === 'accent' ? 'text-accent' :
-                        'text-muted-foreground'
-                      }`} />
-                    </div>
-                    <Badge variant="outline" className={`text-xs ${
-                      kpi.trend === 'up' ? 'text-success border-success/30' : 
-                      kpi.trend === 'down' ? 'text-destructive border-destructive/30' :
-                      'text-muted-foreground border-muted/30'
-                    }`}>
-                      <TrendingUp className={`h-3 w-3 mr-1 ${
-                        kpi.trend === 'down' ? 'rotate-180' : ''
-                      }`} />
-                      {kpi.change}
-                    </Badge>
+      {/* Main Analytics Panel */}
+      <AnalyticsPanel timeframe={timeframe} />
+
+      {/* Reports Grid */}
+      <div className="space-y-6">
+        <div className="flex items-center justify-between">
+          <h2 className="text-2xl font-bold text-yellow-400">
+            Available Reports
+          </h2>
+          <Button
+            variant="outline"
+            className="border-yellow-400 text-yellow-400 hover:bg-yellow-400/10"
+          >
+            <Calendar className="h-4 w-4 mr-2" />
+            Schedule Reports
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          {reportTypes.map((report, index) => (
+            <Card
+              key={index}
+              className="bg-gray-800 border border-gray-700 shadow-lg hover:shadow-yellow-400/10 hover:border-yellow-400/50 transition-all duration-300 cursor-pointer"
+            >
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div
+                    className={`w-12 h-12 rounded-xl flex items-center justify-center ${
+                      report.color === "success"
+                        ? "bg-green-400/20"
+                        : report.color === "primary"
+                        ? "bg-yellow-400/20"
+                        : report.color === "secondary"
+                        ? "bg-blue-400/20"
+                        : "bg-purple-400/20"
+                    }`}
+                  >
+                    <report.icon
+                      className={`h-6 w-6 ${
+                        report.color === "success"
+                          ? "text-green-400"
+                          : report.color === "primary"
+                          ? "text-yellow-400"
+                          : report.color === "secondary"
+                          ? "text-blue-400"
+                          : "text-purple-400"
+                      }`}
+                    />
                   </div>
-                  <div>
-                    <p className="text-sm font-medium text-muted-foreground mb-1">{kpi.title}</p>
-                    <p className="text-xl font-bold text-foreground">{kpi.value}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          {/* Main Analytics Panel */}
-          <AnalyticsPanel timeframe={timeframe} />
-
-          {/* Reports Grid */}
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-foreground">Available Reports</h2>
-              <Button variant="outline" className="border-primary text-primary hover:bg-primary/10">
-                <Calendar className="h-4 w-4 mr-2" />
-                Schedule Reports
-              </Button>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-              {reportTypes.map((report, index) => (
-                <Card key={index} variant="interactive" className="hover:shadow-glow transition-all duration-300 cursor-pointer">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                        report.color === 'success' ? 'bg-gradient-to-br from-success/20 to-success/10' :
-                        report.color === 'primary' ? 'bg-gradient-to-br from-primary/20 to-primary/10' :
-                        report.color === 'secondary' ? 'bg-gradient-to-br from-secondary/20 to-secondary/10' :
-                        'bg-gradient-to-br from-accent/20 to-accent/10'
-                      }`}>
-                        <report.icon className={`h-6 w-6 ${
-                          report.color === 'success' ? 'text-success' :
-                          report.color === 'primary' ? 'text-primary' :
-                          report.color === 'secondary' ? 'text-secondary' :
-                          'text-accent'
-                        }`} />
-                      </div>
-                      <Badge variant="outline" className="text-xs">
-                        {report.period}
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg font-semibold">{report.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-4">
-                    <p className="text-sm text-muted-foreground">{report.description}</p>
-                    <div className="flex space-x-2">
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <FileText className="h-3 w-3 mr-1" />
-                        View
-                      </Button>
-                      <Button variant="outline" size="sm" className="flex-1">
-                        <Download className="h-3 w-3 mr-1" />
-                        Export
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </main>
+                  <Badge
+                    variant="outline"
+                    className="text-xs border-yellow-400 text-yellow-400"
+                  >
+                    {report.period}
+                  </Badge>
+                </div>
+                <CardTitle className="text-lg font-semibold text-white">
+                  {report.title}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <p className="text-sm text-gray-400">{report.description}</p>
+                <div className="flex space-x-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-yellow-400 text-yellow-400 hover:bg-yellow-400/10"
+                  >
+                    <FileText className="h-3 w-3 mr-1" />
+                    View
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1 border-yellow-400 text-yellow-400 hover:bg-yellow-400/10"
+                  >
+                    <Download className="h-3 w-3 mr-1" />
+                    Export
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
       </div>
     </div>
   );
