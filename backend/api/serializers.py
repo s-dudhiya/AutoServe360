@@ -18,11 +18,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = '__all__'
 
-# Serializer for creating a Vehicle (nested in JobCard creation)
-class VehicleCreateNestedSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Vehicle
-        fields = ['make', 'model', 'registration_no', 'vehicle_type']
 
 # Serializer for displaying Vehicle details, including nested Customer info
 class VehicleSerializer(serializers.ModelSerializer):
@@ -73,6 +68,15 @@ class ServiceTaskCreateSerializer(serializers.ModelSerializer):
         model = ServiceTask
         fields = ['description']
 
+# --- FIX 1: Prevent premature unique validation ---
+class VehicleCreateNestedSerializer(serializers.ModelSerializer):
+    # This overrides the default unique validator from the model field,
+    # allowing our custom 'create' logic to handle it.
+    registration_no = serializers.CharField(validators=[])
+
+    class Meta:
+        model = Vehicle
+        fields = ['make', 'model', 'registration_no', 'vehicle_type']
 # Serializer for creating a new Job Card
 class JobCardCreateSerializer(serializers.ModelSerializer):
     tasks = ServiceTaskCreateSerializer(many=True)
@@ -81,7 +85,7 @@ class JobCardCreateSerializer(serializers.ModelSerializer):
     customer_id = serializers.IntegerField(required=False, write_only=True)
     vehicle_id = serializers.IntegerField(required=False, write_only=True)
     assigned_mechanic_id = serializers.IntegerField(write_only=True)
-
+    
     class Meta:
         model = JobCard
         fields = [
@@ -89,15 +93,20 @@ class JobCardCreateSerializer(serializers.ModelSerializer):
             'assigned_mechanic_id', 'tasks'
         ]
 
+    # --- FIX 2: Removed the conflicting 'validate' method ---
+    # The 'create' method below already contains all the necessary logic.
+
     def create(self, validated_data):
         try:
             with transaction.atomic():
                 tasks_data = validated_data.pop('tasks')
-                customer_data = validated_data.pop('customer')
-                vehicle_data = validated_data.pop('vehicle')
-                customer_id = validated_data.pop('customer_id', None)
-                vehicle_id = validated_data.pop('vehicle_id', None)
+                # Use initial_data to get IDs, as they are write_only
+                customer_id = self.initial_data.get('customer_id')
+                vehicle_id = self.initial_data.get('vehicle_id')
                 assigned_mechanic_id = validated_data.pop('assigned_mechanic_id')
+                
+                customer_data = validated_data.pop('customer', None)
+                vehicle_data = validated_data.pop('vehicle', None)
                 
                 if customer_id:
                     customer = Customer.objects.get(id=customer_id)
@@ -108,6 +117,7 @@ class JobCardCreateSerializer(serializers.ModelSerializer):
                     vehicle = Vehicle.objects.get(id=vehicle_id)
                 else:
                     reg_no = vehicle_data.get('registration_no')
+                    # This logic correctly finds an existing vehicle or creates a new one.
                     vehicle, created = Vehicle.objects.get_or_create(
                         registration_no__iexact=reg_no,
                         defaults={'customer': customer, **vehicle_data}
@@ -117,8 +127,7 @@ class JobCardCreateSerializer(serializers.ModelSerializer):
                 job_card = JobCard.objects.create(
                     customer=customer,
                     vehicle=vehicle,
-                    assigned_mechanic=assigned_mechanic,
-                    **validated_data
+                    assigned_mechanic=assigned_mechanic
                 )
                 for task_data in tasks_data:
                     ServiceTask.objects.create(jobcard=job_card, **task_data)
@@ -204,3 +213,13 @@ class InvoiceCreateSerializer(serializers.ModelSerializer):
         fields = ['labor_charge', 'discount', 'tax']
         # Tax will be calculated, but we allow it to be passed for potential overrides
         required_fields = ['labor_charge', 'discount']
+
+class IssuePartActionSerializer(serializers.Serializer):
+    part_id = serializers.IntegerField(required=True)
+    quantity_used = serializers.IntegerField(required=True, min_value=1)
+
+    def validate_part_id(self, value):
+        # Check if the part actually exists in the database
+        if not Part.objects.filter(pk=value).exists():
+            raise serializers.ValidationError("A part with this ID does not exist.")
+        return value

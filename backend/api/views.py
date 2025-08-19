@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 from .utils import generate_invoice_pdf
 from .models import User, Vehicle, JobCard, Part, PartUsage,Invoice
 from .serializers import( LoginSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
-                         JobCardListSerializer,JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer )
+                         JobCardListSerializer,IssuePartActionSerializer, JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer )
 
 class LoginView(APIView):
     def post(self, request):
@@ -110,36 +110,32 @@ class IssuePartAPIView(APIView):
     This action is transactional and updates stock quantity.
     """
     def post(self, request, pk, *args, **kwargs):
-        # Find the job card using the 'pk' from the URL
         jobcard = get_object_or_404(JobCard, pk=pk)
         
-        serializer = PartUsageSerializer(data=request.data)
+        # Use the new action-specific serializer
+        serializer = IssuePartActionSerializer(data=request.data)
         if serializer.is_valid():
             part_id = serializer.validated_data['part_id']
             quantity_to_use = serializer.validated_data['quantity_used']
             
             part = get_object_or_404(Part, pk=part_id)
 
-            # Use a database transaction for this critical operation
             try:
                 with transaction.atomic():
-                    # 1. Check if there is enough stock
                     if part.stock_quantity < quantity_to_use:
                         return Response(
                             {"error": f"Not enough stock for '{part.name}'. Only {part.stock_quantity} available."},
                             status=status.HTTP_400_BAD_REQUEST
                         )
                     
-                    # 2. Decrement the stock quantity
                     part.stock_quantity -= quantity_to_use
                     part.save()
 
-                    # 3. Create the PartUsage record
                     PartUsage.objects.create(
                         jobcard=jobcard,
                         part=part,
                         quantity_used=quantity_to_use,
-                        price_at_time_of_use=part.unit_price # Copy the current price
+                        price_at_time_of_use=part.unit_price
                     )
                 
                 return Response({"success": f"Successfully issued {quantity_to_use} x {part.name} to JobCard {jobcard.id}"}, status=status.HTTP_201_CREATED)
