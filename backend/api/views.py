@@ -319,25 +319,44 @@ class InvoiceExportAPIView(APIView):
 # --- THIS VIEW IS NOW FIXED (NO AUTHENTICATION) ---
 class MyJobsAPIView(generics.ListAPIView):
     serializer_class = JobCardListSerializer
-    # permission_classes has been removed.
 
     def get_queryset(self):
-        """
-        This method now filters jobs based on a 'mechanic_id' provided
-        as a query parameter from the frontend.
-        e.g., /api/my-jobs/?mechanic_id=2
-        """
         mechanic_id = self.request.query_params.get('mechanic_id', None)
         if mechanic_id:
             try:
-                # Find the user who is a mechanic with the given ID
                 mechanic = User.objects.get(id=mechanic_id, role='mechanic')
                 return JobCard.objects.filter(assigned_mechanic=mechanic).select_related(
                     'customer', 'vehicle'
                 ).order_by('-created_at')
             except User.DoesNotExist:
-                return JobCard.objects.none() # Return empty if ID is not a mechanic
-        return JobCard.objects.none() # Return empty if no ID is provided
+                return JobCard.objects.none()
+        return JobCard.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        # 1. Get the standard list of jobs for the mechanic
+        queryset = self.get_queryset()
+        serializer = self.get_serializer(queryset, many=True)
+        jobs_data = serializer.data
+
+        # 2. Perform the earnings calculation
+        mechanic_id = request.query_params.get('mechanic_id', None)
+        mechanic_earnings = Decimal('0.00')
+        if mechanic_id:
+            # Find all invoices linked to jobs assigned to this mechanic
+            total_labor = Invoice.objects.filter(
+                jobcard__assigned_mechanic_id=mechanic_id
+            ).aggregate(total=Sum('labor_charge', default=Decimal('0.0')))['total']
+            
+            # Calculate 70% of the total labor
+            mechanic_earnings = total_labor * Decimal('0.70')
+
+        # 3. Combine the jobs list and the earnings into a single response
+        response_data = {
+            'jobs': jobs_data,
+            'earnings': mechanic_earnings
+        }
+        
+        return Response(response_data)
 
 
 # --- THIS VIEW IS NOW FIXED (NO AUTHENTICATION) ---

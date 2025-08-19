@@ -146,8 +146,8 @@ export function WorkflowManager({ job, userRole, onUpdate }) {
             <Card className="bg-gradient-to-r from-green-500/10 to-green-600/10 border border-green-500/30">
                 <CardContent className="p-6 flex flex-col items-center text-center">
                     <CheckCircle className="h-12 w-12 text-green-400 mb-2" />
-                    <h3 className="text-lg font-bold text-white">All Tasks Completed!</h3>
-                    <p className="text-gray-400 mb-4">You can now mark the entire service as completed.</p>
+                    <h3 className="text-lg font-bold text-gray-900">All Tasks Completed!</h3>
+                    <p className="text-gray-700 mb-4">You can now mark the entire service as completed.</p>
                     <Button onClick={handleCompleteService} disabled={isLoading} className="bg-green-500 hover:bg-green-600 text-white">
                         {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : "Mark Service as Completed"}
                     </Button>
