@@ -223,3 +223,20 @@ class IssuePartActionSerializer(serializers.Serializer):
         if not Part.objects.filter(pk=value).exists():
             raise serializers.ValidationError("A part with this ID does not exist.")
         return value
+
+class InvoiceExportSerializer(serializers.ModelSerializer):
+    # Include customer name for clarity in the report
+    customer_name = serializers.CharField(source='jobcard.customer.name', read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = [
+            'id', 
+            'created_at', 
+            'customer_name',
+            'parts_total', 
+            'labor_charge',
+            'tax',
+            'discount',
+            'total_amount'
+        ]
