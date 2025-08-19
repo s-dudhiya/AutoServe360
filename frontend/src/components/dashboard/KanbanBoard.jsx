@@ -4,102 +4,88 @@ import { Button } from "@/components/ui/button";
 import { 
   Clock, 
   User, 
-  Phone, 
   Car, 
   ArrowRight,
-  AlertTriangle,
   CheckCircle,
   Timer,
   Wrench,
   Package
 } from "lucide-react";
 
+// Updated status configuration to match the new dark theme
 const statusConfig = {
   'In Queue': {
     title: 'In Queue',
     icon: Timer,
-    color: 'bg-secondary/10 text-secondary border-secondary/20',
-    headerBg: 'bg-secondary/5',
-    count: 0
+    color: 'bg-blue-400/20 text-blue-400 border-blue-400/30',
+    headerBg: 'bg-gray-900/50',
   },
   'Under Service': {
     title: 'Under Service',
     icon: Wrench,
-    color: 'bg-warning/10 text-warning border-warning/20',
-    headerBg: 'bg-warning/5',
-    count: 0
+    color: 'bg-orange-400/20 text-orange-400 border-orange-400/30',
+    headerBg: 'bg-gray-900/50',
   },
   'Awaiting Parts': {
     title: 'Awaiting Parts',
     icon: Package,
-    color: 'bg-destructive/10 text-destructive border-destructive/20',
-    headerBg: 'bg-destructive/5',
-    count: 0
+    color: 'bg-yellow-400/20 text-yellow-400 border-yellow-400/30',
+    headerBg: 'bg-gray-900/50',
   },
   'QC': {
     title: 'Quality Check',
     icon: CheckCircle,
-    color: 'bg-primary/10 text-primary border-primary/20',
-    headerBg: 'bg-primary/5',
-    count: 0
+    color: 'bg-purple-400/20 text-purple-400 border-purple-400/30',
+    headerBg: 'bg-gray-900/50',
   },
   'Completed': {
     title: 'Completed',
     icon: CheckCircle,
-    color: 'bg-success/10 text-success border-success/20',
-    headerBg: 'bg-success/5',
-    count: 0
+    color: 'bg-green-400/20 text-green-400 border-green-400/30',
+    headerBg: 'bg-gray-900/50',
   }
 };
 
-export  function KanbanBoard({ jobs, onMoveJob, viewType }) {
+export function KanbanBoard({ jobs, onMoveJob, viewType }) {
   const jobsByStatus = jobs.reduce((acc, job) => {
     if (!acc[job.status]) acc[job.status] = [];
     acc[job.status].push(job);
     return acc;
   }, {});
 
-  const formatTime = (dateString) => {
-    return new Date(dateString).toLocaleTimeString('en-US', { 
-      hour: '2-digit', 
-      minute: '2-digit',
-      hour12: true 
-    });
-  };
-
   const getTimeSince = (dateString) => {
+    if (!dateString) return 'N/A';
     const diff = Date.now() - new Date(dateString).getTime();
     const hours = Math.floor(diff / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     
+    if (hours > 23) return `${Math.floor(hours/24)}d ago`;
     if (hours > 0) return `${hours}h ${minutes}m ago`;
     return `${minutes}m ago`;
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'High': return 'bg-destructive text-destructive-foreground';
-      case 'Medium': return 'bg-warning text-warning-foreground';
-      case 'Low': return 'bg-success text-success-foreground';
-      default: return 'bg-muted text-muted-foreground';
-    }
-  };
+  // Create a new object that excludes the 'Completed' status.
+  const activeStatusConfig = Object.fromEntries(
+    Object.entries(statusConfig).filter(([status]) => status !== 'Completed')
+  );
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 h-[calc(100vh-16rem)] overflow-hidden">
-      {Object.entries(statusConfig).map(([status, config]) => {
+    // Adjust the grid columns to create a 2x2 layout on medium screens and up.
+    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 h-full">
+      {/* Iterate over the new, filtered config object. */}
+      {Object.entries(activeStatusConfig).map(([status, config]) => {
         const statusJobs = jobsByStatus[status] || [];
         const StatusIcon = config.icon;
         
         return (
-          <Card key={status} className="flex flex-col border-0 shadow-medium bg-gradient-card">
-            <CardHeader className={`pb-4 ${config.headerBg} border-b border-border/20`}>
+          <Card key={status} className="flex flex-col bg-gray-800 border border-gray-700 shadow-lg h-full">
+            <CardHeader className={`pb-4 ${config.headerBg} border-b border-gray-700`}>
               <CardTitle className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${config.color.replace('text-', 'bg-').replace('/10', '/20')}`}>
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${config.color}`}>
                     <StatusIcon className="h-4 w-4" />
                   </div>
-                  <span className="text-lg font-bold">{config.title}</span>
+                  <span className="text-lg font-bold text-white">{config.title}</span>
                 </div>
                 <Badge variant="outline" className={config.color}>
                   {statusJobs.length}
@@ -107,53 +93,43 @@ export  function KanbanBoard({ jobs, onMoveJob, viewType }) {
               </CardTitle>
             </CardHeader>
             
-            <CardContent className="flex-1 p-4 overflow-y-auto space-y-4">
+            <CardContent className="flex-1 p-4 overflow-y-auto space-y-4 max-h-[calc(100vh-24rem)]">
               {statusJobs.map((job) => (
-                <Card key={job.id} className="border border-border/40 hover:border-primary/40 transition-colors duration-200 hover:shadow-glow cursor-pointer">
+                <Card key={job.id} className="bg-gray-900/50 border border-gray-700 hover:border-yellow-400/50 transition-colors duration-200">
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-start justify-between">
                       <div className="space-y-1">
-                        <div className="flex items-center space-x-2">
-                          <span className="font-semibold text-foreground">#{job.id}</span>
-                          <Badge className={getPriorityColor(job.priority)}>
-                            {job.priority}
-                          </Badge>
-                        </div>
-                        <h4 className="font-medium text-foreground">{job.customerName}</h4>
+                        <span className="font-semibold text-white">#{job.id}</span>
+                        <h4 className="font-medium text-gray-300">{job.customerName}</h4>
                       </div>
                       {status === 'Under Service' && (
-                        <div className="w-3 h-3 bg-success rounded-full animate-pulse"></div>
+                        <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse" title="In Progress"></div>
                       )}
                     </div>
 
                     <div className="space-y-2 text-sm">
-                      <div className="flex items-center space-x-2 text-muted-foreground">
-                        <Car className="h-3 w-3" />
+                      <div className="flex items-center space-x-2 text-gray-400">
+                        <Car className="h-4 w-4" />
                         <span>{job.vehicleBrand} {job.vehicleModel}</span>
                       </div>
-                      <div className="flex items-center space-x-2 text-muted-foreground">
-                        <span className="font-mono text-xs bg-muted px-2 py-1 rounded">{job.vehicleNumber}</span>
+                       <div className="flex items-center space-x-2 text-gray-400">
+                        <span className="font-mono text-xs bg-gray-700 px-2 py-1 rounded">{job.vehicleNumber}</span>
                       </div>
                       {viewType === 'admin' && job.assignedMechanic && (
-                        <div className="flex items-center space-x-2 text-muted-foreground">
-                          <User className="h-3 w-3" />
+                        <div className="flex items-center space-x-2 text-gray-400">
+                          <User className="h-4 w-4" />
                           <span className="text-xs">{job.assignedMechanic}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="pt-2 border-t border-border/20">
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                    <div className="pt-2 border-t border-gray-700">
+                      <div className="flex items-center justify-between text-xs text-gray-500">
                         <div className="flex items-center space-x-1">
                           <Clock className="h-3 w-3" />
-                          <span>{getTimeSince(job.createdAt)}</span>
+                          <span>{getTimeSince(job.created_at)}</span>
                         </div>
-                        <span>ETA: {formatTime(job.estimatedCompletion)}</span>
                       </div>
-                    </div>
-
-                    <div className="text-xs text-muted-foreground bg-muted/30 p-2 rounded-md">
-                      {job.serviceType}
                     </div>
 
                     {/* Action Buttons for Status Changes */}
@@ -162,40 +138,27 @@ export  function KanbanBoard({ jobs, onMoveJob, viewType }) {
                         {status === 'In Queue' && (
                           <Button 
                             size="sm" 
-                            className="w-full bg-gradient-accent text-primary hover:shadow-glow transition-all duration-300"
+                            className="w-full bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 shadow-md"
                             onClick={() => onMoveJob(job.id, 'Under Service')}
                           >
-                            <ArrowRight className="h-3 w-3 mr-1" />
+                            <ArrowRight className="h-4 w-4 mr-2" />
                             Start Service
                           </Button>
                         )}
                         {status === 'Under Service' && (
                           <div className="grid grid-cols-2 gap-2">
-                            <Button 
-                              size="sm" 
-                              variant="outline"
-                              className="text-xs border-warning text-warning hover:bg-warning/10"
-                              onClick={() => onMoveJob(job.id, 'Awaiting Parts')}
-                            >
+                            <Button size="sm" variant="outline" className="text-xs border-yellow-400/50 text-yellow-400 hover:bg-yellow-400/10" onClick={() => onMoveJob(job.id, 'Awaiting Parts')}>
                               Need Parts
                             </Button>
-                            <Button 
-                              size="sm"
-                              className="text-xs bg-gradient-modern text-secondary hover:shadow-glow"
-                              onClick={() => onMoveJob(job.id, 'QC')}
-                            >
+                            <Button size="sm" className="text-xs bg-blue-500 hover:bg-blue-600 text-white" onClick={() => onMoveJob(job.id, 'QC')}>
                               To QC
                             </Button>
                           </div>
                         )}
                         {(status === 'Awaiting Parts' || status === 'QC') && (
-                          <Button 
-                            size="sm" 
-                            className="w-full bg-success hover:bg-success/90 text-success-foreground"
-                            onClick={() => onMoveJob(job.id, 'Completed')}
-                          >
-                            <CheckCircle className="h-3 w-3 mr-1" />
-                            Complete
+                          <Button size="sm" className="w-full bg-green-500 hover:bg-green-600 text-white" onClick={() => onMoveJob(job.id, 'Completed')}>
+                            <CheckCircle className="h-4 w-4 mr-2" />
+                            Complete Job
                           </Button>
                         )}
                       </div>
@@ -205,8 +168,8 @@ export  function KanbanBoard({ jobs, onMoveJob, viewType }) {
               ))}
               
               {statusJobs.length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  <StatusIcon className="h-8 w-8 mx-auto mb-2 opacity-30" />
+                <div className="text-center py-8 text-gray-500">
+                  <StatusIcon className="h-8 w-8 mx-auto mb-2 opacity-50" />
                   <p className="text-sm">No jobs in {config.title.toLowerCase()}</p>
                 </div>
               )}

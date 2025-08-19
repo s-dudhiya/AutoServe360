@@ -14,8 +14,8 @@ import pytz # Import the pytz library for timezone handling
 import time
 
 from .utils import generate_invoice_pdf
-from .models import User, Vehicle, JobCard, Part, PartUsage,Invoice
-from .serializers import( LoginSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
+from .models import ServiceTask, User, Vehicle, JobCard, Part, PartUsage,Invoice
+from .serializers import( JobCardStatusUpdateSerializer, LoginSerializer, ServiceTaskUpdateSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
                          JobCardListSerializer,IssuePartActionSerializer, JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer,InvoiceExportSerializer )
 
 class LoginView(APIView):
@@ -315,3 +315,42 @@ class InvoiceExportAPIView(APIView):
         
         serializer = InvoiceExportSerializer(invoices, many=True)
         return Response(serializer.data)
+
+# --- THIS VIEW IS NOW FIXED (NO AUTHENTICATION) ---
+class MyJobsAPIView(generics.ListAPIView):
+    serializer_class = JobCardListSerializer
+    # permission_classes has been removed.
+
+    def get_queryset(self):
+        """
+        This method now filters jobs based on a 'mechanic_id' provided
+        as a query parameter from the frontend.
+        e.g., /api/my-jobs/?mechanic_id=2
+        """
+        mechanic_id = self.request.query_params.get('mechanic_id', None)
+        if mechanic_id:
+            try:
+                # Find the user who is a mechanic with the given ID
+                mechanic = User.objects.get(id=mechanic_id, role='mechanic')
+                return JobCard.objects.filter(assigned_mechanic=mechanic).select_related(
+                    'customer', 'vehicle'
+                ).order_by('-created_at')
+            except User.DoesNotExist:
+                return JobCard.objects.none() # Return empty if ID is not a mechanic
+        return JobCard.objects.none() # Return empty if no ID is provided
+
+
+# --- THIS VIEW IS NOW FIXED (NO AUTHENTICATION) ---
+class JobCardStatusUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = JobCardStatusUpdateSerializer
+    queryset = JobCard.objects.all() # A mechanic can update any job card now
+    # permission_classes has been removed.
+
+
+class ServiceTaskUpdateAPIView(generics.UpdateAPIView):
+    serializer_class = ServiceTaskUpdateSerializer
+    # permission_classes has been removed as requested.
+    
+    # The queryset now allows updating any ServiceTask by its ID.
+    queryset = ServiceTask.objects.all()
+

@@ -240,3 +240,21 @@ class InvoiceExportSerializer(serializers.ModelSerializer):
             'discount',
             'total_amount'
         ]
+
+class JobCardStatusUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = JobCard
+        fields = ['status'] 
+
+class ServiceTaskUpdateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ServiceTask
+        fields = ['completed'] # Only the 'completed' field can be updated
+    def to_representation(self, instance):
+        """
+        This method customizes the output of the serializer.
+        It converts the boolean 'completed' field into an integer (1 or 0).
+        """
+        representation = super().to_representation(instance)
+        representation['completed'] = 1 if instance.completed else 0
+        return representation
