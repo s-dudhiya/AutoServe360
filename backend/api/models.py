@@ -1,4 +1,5 @@
 from django.db import models
+from django.utils import timezone
 
 # ---------------- User Model ----------------
 class User(models.Model):
@@ -49,7 +50,7 @@ class JobCard(models.Model):
     ]
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
     vehicle = models.ForeignKey(Vehicle, on_delete=models.CASCADE)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='queue')
     assigned_mechanic = models.ForeignKey(
         User,
@@ -94,7 +95,7 @@ class Invoice(models.Model):
     tax = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     total_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
-    created_at = models.DateTimeField(auto_now_add=True)
+    created_at = models.DateTimeField(default=timezone.now)
 
     def __str__(self):
         return f"Invoice for {self.jobcard}"

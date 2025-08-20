@@ -70,7 +70,14 @@ export function InvoiceFormModal({ isOpen, onClose, onSuccess, job }) {
 
     const currentSubtotal = calculatedPartsTotal + currentLabor;
     const currentGst = currentSubtotal * 0.12;
-    const currentGrandTotal = currentSubtotal + currentGst - currentDiscount;
+    let currentGrandTotal = currentSubtotal - currentDiscount;
+
+    if (currentGrandTotal < 0) {
+       currentGrandTotal = currentGst;
+    }
+    else{
+      currentGrandTotal+=currentGst;
+    }
 
     setSubtotal(currentSubtotal);
     setGstAmount(currentGst);
@@ -79,27 +86,41 @@ export function InvoiceFormModal({ isOpen, onClose, onSuccess, job }) {
   }, [job, laborCharge, discount, isOpen]);
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
+  e.preventDefault();
+  setIsSubmitting(true);
+  setError("");
 
-    try {
-      const payload = {
-        labor_charge: laborCharge,
-        discount: discount,
-      };
-      await axios.post(`http://127.0.0.1:8000/api/jobcards/${job.id}/create-invoice/`, payload);
-      toast.success("Invoice generated successfully!");
-      onSuccess();
-    } catch (err) {
-      const errorMessage = err.response?.data?.error || "Failed to generate invoice.";
-      setError(errorMessage);
-      toast.error(errorMessage);
-      console.error(err.response?.data || err);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+  try {
+    const currentLabor = parseFloat(laborCharge) || 0;
+    const currentParts = partsTotal;
+    const currentSubtotal = currentLabor + currentParts;
+    const currentGst = currentSubtotal * 0.12;
+
+    // ✅ Only allow discount up to subtotal (not subtotal+GST)
+    const maxDiscount = currentSubtotal;
+    const safeDiscount = Math.min(parseFloat(discount) || 0, maxDiscount);
+
+    const payload = {
+      labor_charge: currentLabor,
+      discount: safeDiscount, // ✅ GST is untouched
+    };
+
+    await axios.post(
+      `http://127.0.0.1:8000/api/jobcards/${job.id}/create-invoice/`,
+      payload
+    );
+    toast.success("Invoice generated successfully!");
+    onSuccess();
+  } catch (err) {
+    const errorMessage =
+      err.response?.data?.error || "Failed to generate invoice.";
+    setError(errorMessage);
+    toast.error(errorMessage);
+    console.error(err.response?.data || err);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

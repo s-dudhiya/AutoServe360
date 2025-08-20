@@ -219,11 +219,11 @@ export default function Landing() {
             </div>
           </div>
           <div className="flex items-center space-x-4 slide-in-right">
-            <Button variant="ghost" className="text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/10 transition-all duration-300" onClick={() => navigate('/login')}>
+            {/* <Button variant="ghost" className="text-gray-300 hover:text-yellow-400 hover:bg-yellow-400/10 transition-all duration-300" onClick={() => navigate('/login')}>
               Sign In
-            </Button>
-            <Button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 font-semibold shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 hover:scale-105">
-              Get Started
+            </Button> */}
+            <Button className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 font-semibold shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 hover:scale-105" onClick={() => navigate('/login')}>
+              Sign In
             </Button>
           </div>
         </div>
@@ -231,7 +231,7 @@ export default function Landing() {
 
       {/* Hero Section */}
       <section className="pt-32 pb-20 px-6 bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 relative">
-        {/* Animated Background Elements */}
+        {/* Animated Background Elements */} 
         {/* <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-1/4 left-1/4 w-32 h-32 text-yellow-400/10 float-animation">
             <Bike className="w-full h-full" />
@@ -268,20 +268,20 @@ export default function Landing() {
               <div className="flex flex-col sm:flex-row gap-4 mb-12">
                 <Button 
                   size="lg"
-                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500 hover:to-yellow-700 font-semibold shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105"
+                  className="bg-gradient-to-r from-yellow-400 to-yellow-600 text-gray-900 hover:from-yellow-500  hover:to-yellow-700 font-semibold shadow-lg hover:shadow-yellow-400/25 transition-all duration-300 transform hover:scale-105"
                   onClick={() => navigate('/login')}
                 >
-                  Start Free Trial
+                  Get Started
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
-                <Button 
+                {/* <Button 
                   size="lg"
                   variant="outline"
                   className="border-yellow-400 text-yellow-400 hover:bg-yellow-400/10 transition-all duration-300 group"
                 >
                   <Play className="mr-2 h-5 w-5 group-hover:scale-110 transition-transform" />
                   Watch Demo
-                </Button>
+                </Button> */}
               </div>
 
               {/* Service Types */}
@@ -472,7 +472,7 @@ export default function Landing() {
       </section>
 
       {/* Enhanced CTA Section */}
-      <section className="py-20 px-6 bg-gradient-to-r from-yellow-400 to-yellow-600 relative overflow-hidden">
+      {/* <section className="py-20 px-6 bg-gradient-to-r from-yellow-400 to-yellow-600 relative overflow-hidden">
         <div className="absolute inset-0">
           <div className="absolute top-1/4 left-1/4 w-20 h-20 text-gray-900/10 float-animation">
             <Bike className="w-full h-full" />
@@ -508,7 +508,7 @@ export default function Landing() {
             </Button>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* Enhanced Footer */}
       <footer className="py-12 px-6 bg-gray-900 border-t border-gray-800">
