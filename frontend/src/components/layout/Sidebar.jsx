@@ -16,12 +16,12 @@ const adminNavItems = [
   { title: "Job Cards", path: "/admin/jobs", icon: FileText },
   { title: "Inventory", path: "/admin/inventory", icon: Package },
   { title: "Reports", path: "/admin/reports", icon: BarChart3 },
-  { title: "Notifications", path: "/admin/notifications", icon: Bell },
+  // { title: "Notifications", path: "/admin/notifications", icon: Bell },
 ];
 
 const mechanicNavItems = [
   { title: "My Jobs", path: "/mechanic", icon: Wrench },
-  { title: "Notifications", path: "/mechanic/notifications", icon: Bell },
+  // { title: "Notifications", path: "/mechanic/notifications", icon: Bell },
 ];
 
 export function Sidebar({ collapsed }) {

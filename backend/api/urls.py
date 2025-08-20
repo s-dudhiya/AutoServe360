@@ -3,7 +3,7 @@ from django.urls import path
 from .views import( InvoiceExportAPIView, LoginView, ServiceTaskUpdateAPIView, VehicleFindAPIView,
     MechanicListAPIView,JobCardListCreateAPIView,JobCardDetailAPIView,
     PartListCreateAPIView,PartDetailAPIView,IssuePartAPIView,InvoiceCreateAPIView,InvoicePDFView,
-    ReportsAPIView,MyJobsAPIView,JobCardStatusUpdateAPIView )
+    ReportsAPIView,MyJobsAPIView,JobCardStatusUpdateAPIView, UserProfileView,ChangePinView  )
 
 urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
@@ -21,4 +21,6 @@ urlpatterns = [
     path('my-jobs/', MyJobsAPIView.as_view(), name='my-jobs'),
     path('jobcards/<int:pk>/update-status/', JobCardStatusUpdateAPIView.as_view(), name='jobcard-update-status'),
     path('tasks/<int:pk>/update/', ServiceTaskUpdateAPIView.as_view(), name='task-update'),
+     path('users/<int:pk>/', UserProfileView.as_view(), name='user-profile'),
+    path('users/<int:pk>/change-pin/', ChangePinView.as_view(), name='change-pin'),
 ]

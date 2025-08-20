@@ -258,3 +258,19 @@ class ServiceTaskUpdateSerializer(serializers.ModelSerializer):
         representation = super().to_representation(instance)
         representation['completed'] = 1 if instance.completed else 0
         return representation
+
+class ChangePinSerializer(serializers.Serializer):
+    """
+    Serializer for PIN change validation.
+    """
+    current_pin = serializers.IntegerField(required=True)
+    new_pin = serializers.IntegerField(required=True)
+    new_pin_confirm = serializers.IntegerField(required=True)
+
+    def validate(self, data):
+        """
+        Check that the two new PINs match.
+        """
+        if data['new_pin'] != data['new_pin_confirm']:
+            raise serializers.ValidationError({"new_pin_confirm": "New PINs do not match."})
+        return data

@@ -9,13 +9,14 @@ from django.db import transaction
 from decimal import Decimal 
 from django.db.models import Sum, Count, Avg
 from django.db.models.functions import TruncDate
+from rest_framework.permissions import IsAuthenticated
 from django.shortcuts import get_object_or_404
 import pytz # Import the pytz library for timezone handling
 import time
 
 from .utils import generate_invoice_pdf
 from .models import ServiceTask, User, Vehicle, JobCard, Part, PartUsage,Invoice
-from .serializers import( JobCardStatusUpdateSerializer, LoginSerializer, ServiceTaskUpdateSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
+from .serializers import( ChangePinSerializer, JobCardStatusUpdateSerializer, LoginSerializer, ServiceTaskUpdateSerializer, UserResponseSerializer,VehicleSerializer, MechanicSerializer, JobCardCreateSerializer,
                          JobCardListSerializer,IssuePartActionSerializer, JobCardDetailSerializer, PartSerializer,  PartUsageSerializer,InvoiceCreateSerializer,InvoiceDetailSerializer,InvoiceExportSerializer )
 
 class LoginView(APIView):
@@ -373,3 +374,39 @@ class ServiceTaskUpdateAPIView(generics.UpdateAPIView):
     # The queryset now allows updating any ServiceTask by its ID.
     queryset = ServiceTask.objects.all()
 
+# --- NEW: A secure endpoint to get the current user's details ---
+class UserProfileView(APIView):
+    """
+    Provides the details for a specific user by their ID.
+    """
+    def get(self, request, pk, *args, **kwargs):
+        # The user is now fetched by the primary key (pk) from the URL
+        user = get_object_or_404(User, pk=pk)
+        serializer = UserResponseSerializer(user)
+        return Response(serializer.data)
+
+
+# --- UPDATED: This view no longer uses IsAuthenticated ---
+class ChangePinView(APIView):
+    """
+    Allows changing a PIN for a specific user by their ID.
+    """
+    def post(self, request, pk, *args, **kwargs):
+        user = get_object_or_404(User, pk=pk)
+        serializer = ChangePinSerializer(data=request.data)
+        if serializer.is_valid():
+            current_pin = serializer.validated_data['current_pin']
+            new_pin = serializer.validated_data['new_pin']
+
+            if user.pin != current_pin:
+                return Response(
+                    {"error": "Your current PIN is incorrect."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user.pin = new_pin
+            user.save()
+
+            return Response({"success": "Your PIN has been updated successfully."}, status=status.HTTP_200_OK)
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)

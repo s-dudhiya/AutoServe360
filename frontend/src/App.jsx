@@ -17,7 +17,8 @@ import MechanicNotificationsPage from "./pages/mechanic/NotificationsPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/layout/ProtectedRoute";
 import CreateJobCardPage from "./pages/admin/CreateJobCardPage";
-import { MainLayout } from "./components/layout/MainLayout"; // Import the layout
+import { MainLayout } from "./components/layout/MainLayout";
+import ProfilePage from "./pages/ProfilePage"; 
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ const App = () => (
               <Route path="/admin/inventory" element={<InventoryPage />} />
               <Route path="/admin/reports" element={<ReportsPage />} />
               <Route path="/admin/notifications" element={<NotificationsPage />} />
+               <Route path="/admin/profile" element={<ProfilePage />} /> 
             </Route>
 
             {/* Mechanic Routes - All wrapped inside MainLayout */}
@@ -58,8 +60,9 @@ const App = () => (
             >
               <Route path="/mechanic" element={<MechanicDashboard />} />
               <Route path="/mechanic/notifications" element={<MechanicNotificationsPage />} />
+              <Route path="/mechanic/profile" element={<ProfilePage />} />
             </Route>
-
+              
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>
