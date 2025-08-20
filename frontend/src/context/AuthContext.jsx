@@ -10,14 +10,10 @@ export const AuthProvider = ({ children }) => {
 
     useEffect(() => {
         try {
-            const storedRole = localStorage.getItem('userRole');
-            const storedEmail = localStorage.getItem('userEmail');
-            // --- FIX: Read the username from localStorage ---
-            const storedUsername = localStorage.getItem('username'); 
-            
-            if (storedRole && storedEmail && storedUsername) {
-                // --- FIX: Add username to the user object on refresh ---
-                setUser({ role: storedRole, email: storedEmail, username: storedUsername });
+            // ✅ Better: store/retrieve a single object instead of 3 separate keys
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+                setUser(JSON.parse(storedUser));
             }
         } catch (error) {
             console.error("Failed to parse user from localStorage", error);
@@ -27,11 +23,8 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = (userData) => {
-        // --- FIX: Save the username to localStorage on login ---
-        localStorage.setItem('userRole', userData.role);
-        localStorage.setItem('userEmail', userData.email);
-        localStorage.setItem('username', userData.username); // <-- ADD THIS LINE
-        
+        // ✅ Store complete user object
+        localStorage.setItem('user', JSON.stringify(userData));
         setUser(userData);
 
         if (userData.role === 'admin') {
@@ -42,7 +35,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     const logout = () => {
-        localStorage.clear();
+        localStorage.removeItem('user'); // only clear what we set
         setUser(null);
         navigate('/login', { replace: true });
     };
