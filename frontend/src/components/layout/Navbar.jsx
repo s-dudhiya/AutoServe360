@@ -64,10 +64,10 @@ export function Navbar({ sidebarCollapsed, toggleSidebar }) {
       {/* Right Section */}
       <div className="flex items-center space-x-4">
         {/* Notifications */}
-        <button className="p-2 rounded-lg hover:bg-gray-700 transition-colors duration-200 group relative">
+        {/* <button className="p-2 rounded-lg hover:bg-gray-700 transition-colors duration-200 group relative">
           <Bell className="h-6 w-6 text-gray-300 group-hover:text-yellow-400 transition-colors duration-200" />
           <span className="absolute -top-1 -right-1 w-3 h-3 bg-yellow-400 rounded-full"></span>
-        </button>
+        </button> */}
 
         {/* Profile Dropdown */}
         <div className="relative" ref={profileRef}>

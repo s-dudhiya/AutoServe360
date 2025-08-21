@@ -142,8 +142,8 @@ export default function InventoryPage() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">
-              Parts Inventory Management
+            <h1 className="text-3xl font-bold py-1 text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">
+              Parts Inventory 
             </h1>
             <p className="text-gray-400">Track bike parts and service supplies inventory</p>
           </div>

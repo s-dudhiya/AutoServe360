@@ -163,7 +163,7 @@ export default function ReportsPage() {
             <BarChart3 className="h-6 w-6 text-gray-900" />
           </div>
           <div>
-            <h1 className="text-4xl font-black text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">Analytics & Reports</h1>
+            <h1 className="text-4xl font-black py-1 text-transparent bg-gradient-to-r from-yellow-400 to-yellow-600 bg-clip-text">Analytics & Reports</h1>
             <p className="text-gray-400 text-lg">Business insights and garage performance</p>
           </div>
         </div>
